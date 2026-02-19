@@ -1,0 +1,192 @@
+{
+  "users": [
+    {
+      "user_id": "455768912794222592",
+      "username": "morgann3925",
+      "points": 0,
+      "level": "rookie",
+      "clips_completed": 0,
+      "clips_validated": 0,
+      "total_earnings": 0,
+      "withdrawn_earnings": 0,
+      "current_streak": 0,
+      "last_activity": "2026-02-09T15:12:25.851Z",
+      "joined_at": "2026-02-09T15:12:25.851Z",
+      "socialAccounts": [],
+      "referral_link": "4jURy9HhSk",
+      "referral_points": 0,
+      "referral_count": 0
+    },
+    {
+      "user_id": "404679917163380750",
+      "username": "t0zz",
+      "points": 0,
+      "level": "rookie",
+      "clips_completed": 0,
+      "clips_validated": 0,
+      "total_earnings": 0,
+      "withdrawn_earnings": 0,
+      "current_streak": 0,
+      "last_activity": "2026-02-09T15:30:21.267Z",
+      "joined_at": "2026-02-09T15:30:21.267Z",
+      "socialAccounts": [],
+      "referral_link": "5PctWQ86XH",
+      "referral_points": 0,
+      "referral_count": 0
+    },
+    {
+      "user_id": "259600243623067658",
+      "username": "carlbys",
+      "points": 0,
+      "level": "rookie",
+      "clips_completed": 0,
+      "clips_validated": 0,
+      "total_earnings": 0,
+      "withdrawn_earnings": 0,
+      "current_streak": 0,
+      "last_activity": "2026-02-10T18:21:13.601Z",
+      "joined_at": "2026-02-10T18:21:13.601Z",
+      "socialAccounts": [],
+      "referral_link": null,
+      "referral_points": 0,
+      "referral_count": 0
+    },
+    {
+      "user_id": "1183491291020013608",
+      "username": "nono_11123",
+      "points": 0,
+      "level": "rookie",
+      "clips_completed": 0,
+      "clips_validated": 0,
+      "total_earnings": 0,
+      "withdrawn_earnings": 0,
+      "current_streak": 0,
+      "last_activity": "2026-02-10T18:26:31.149Z",
+      "joined_at": "2026-02-10T18:26:31.149Z",
+      "socialAccounts": [],
+      "referral_link": null,
+      "referral_points": 0,
+      "referral_count": 0
+    }
+  ],
+  "applications": [
+    {
+      "id": 52112,
+      "user_id": "455768912794222592",
+      "username": "morgann3925",
+      "experience": "Données récupérées (Restauration Système)",
+      "portfolio": "Données récupérées",
+      "motivation": "Membre historique restauré automatiquement.",
+      "status": "approved",
+      "applied_at": "2026-02-09T15:12:25.851Z",
+      "reviewed_at": "2026-02-10T19:07:19.429Z",
+      "reviewed_by": "SYSTEM_REPAIR"
+    },
+    {
+      "id": 75076,
+      "user_id": "404679917163380750",
+      "username": "t0zz",
+      "experience": "Données récupérées (Restauration Système)",
+      "portfolio": "Données récupérées",
+      "motivation": "Membre historique restauré automatiquement.",
+      "status": "approved",
+      "applied_at": "2026-02-09T15:30:21.267Z",
+      "reviewed_at": "2026-02-10T19:07:19.430Z",
+      "reviewed_by": "SYSTEM_REPAIR"
+    },
+    {
+      "id": 24144,
+      "user_id": "259600243623067658",
+      "username": "carlbys",
+      "experience": "Données récupérées (Restauration Système)",
+      "portfolio": "Données récupérées",
+      "motivation": "Membre historique restauré automatiquement.",
+      "status": "approved",
+      "applied_at": "2026-02-10T18:21:13.601Z",
+      "reviewed_at": "2026-02-10T19:07:19.430Z",
+      "reviewed_by": "SYSTEM_REPAIR"
+    },
+    {
+      "id": 46779,
+      "user_id": "1183491291020013608",
+      "username": "nono_11123",
+      "experience": "Données récupérées (Restauration Système)",
+      "portfolio": "Données récupérées",
+      "motivation": "Membre historique restauré automatiquement.",
+      "status": "approved",
+      "applied_at": "2026-02-10T18:26:31.149Z",
+      "reviewed_at": "2026-02-10T19:07:19.430Z",
+      "reviewed_by": "SYSTEM_REPAIR"
+    },
+    {
+      "id": 75077,
+      "user_id": "999999999999999999",
+      "username": "TestRookie",
+      "experience": "2 ans exp",
+      "portfolio": "https://portfolio.com",
+      "motivation": "Je suis motivé",
+      "status": "approved",
+      "applied_at": "2026-02-11T12:16:39.389Z",
+      "reviewed_at": "2026-02-11T12:16:39.390Z",
+      "reviewed_by": "ADMIN_ID"
+    }
+  ],
+  "missions": [
+    {
+      "id": 1,
+      "title": "Le Meilleur Hook Insta",
+      "description": "Ton objectif est de créer ou trouver le hook (l'accroche) le plus viral pour une vidéo Instagram. Celui qui génère le plus de rétention ou d'originalité gagne.",
+      "type": "standard",
+      "payment": 0,
+      "deadline": "15/02/2026",
+      "status": "available",
+      "assigned_to": null,
+      "created_by": "1457731497036480604",
+      "created_at": "2026-02-09T01:35:00.162Z"
+    }
+  ],
+  "submissions": [],
+  "payments": [],
+  "achievements": [],
+  "audit_logs": [],
+  "rate_limits": [],
+  "referrals": [
+    {
+      "id": 1,
+      "referrer_id": "455768912794222592",
+      "referrer_username": "morgann3925",
+      "referred_id": "259600243623067658",
+      "referred_username": "carlbys",
+      "invited_at": "2026-02-10T17:40:15.051Z",
+      "status": "pending",
+      "points_earned": 0,
+      "invite_code": "4jURy9HhSk",
+      "first_mission_at": null
+    },
+    {
+      "id": 2,
+      "referrer_id": "455768912794222592",
+      "referrer_username": "morgann3925",
+      "referred_id": "545099634566234133",
+      "referred_username": "gaal2512",
+      "invited_at": "2026-02-10T17:53:06.517Z",
+      "status": "pending",
+      "points_earned": 0,
+      "invite_code": "4jURy9HhSk",
+      "first_mission_at": null
+    },
+    {
+      "id": 3,
+      "referrer_id": "888888888888888888",
+      "referrer_username": "TestReferrer",
+      "referred_id": "999999999999999999",
+      "referred_username": "TestReferrer",
+      "invited_at": "2026-02-11T12:16:38.703Z",
+      "status": "validated",
+      "points_earned": 50,
+      "invite_code": "TEST-CODE-123",
+      "first_mission_at": null,
+      "validated_at": "2026-02-11T12:16:39.392Z"
+    }
+  ]
+}

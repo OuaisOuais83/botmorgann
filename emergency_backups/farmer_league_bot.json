@@ -1,0 +1,23 @@
+{
+  "users": [],
+  "applications": [],
+  "missions": [
+    {
+      "id": 1,
+      "title": "🪝 MISSION : LE MEILLEUR HOOK",
+      "description": "Le Hook est l’élément le plus CRITIQUE de ton clip. Sur Instagram et TikTok, tu as moins de 1 seconde pour capturer l'attention avant que l'utilisateur ne swipe.\n\n**POURQUOI LE HOOK EST VITAL SUR INSTA :**\n1. **Rétention immédiate** : Si l'utilisateur ne s'arrête pas, ton clip est mort. Un bon hook \"casse\" le scroll.\n2. **Algorithme boosté** : Un fort taux de rétention dès les premières secondes signale à Instagram que ton contenu est premium.\n3. **Curiosité** : Un bon hook pose une question ou montre un visuel que l'esprit veut ABSOLUMENT résoudre.\n\n**TON OBJECTIF :**\nCrée un clip court (5-15s) avec un hook ultra-impactant.\n- Utilise du texte dynamique (gros, lisible).\n- Utilise un \"pattern interrupt\" (visuel ou son surprenant).\n- Pose un dilemme ou une promesse forte.\n\n**RÉCOMPENSE :** \nCette mission est accès sur ton **ÉVOLUTION**. \n- 📈 **Gros bonus de points** pour monter de niveau (Rookie -> Hustler -> Grinder).\n- 🏆 **Éligibilité Prioritaire** pour les missions exclusives.\n*Note : Ta rémunération principale provient de tes liens d'affiliation (200€/1000 clics).*",
+      "type": "express",
+      "payment": 0,
+      "deadline": "48h",
+      "status": "available",
+      "assigned_to": null,
+      "created_by": "ADMIN_SYSTEM",
+      "created_at": "2026-02-08T19:57:20.467Z"
+    }
+  ],
+  "submissions": [],
+  "payments": [],
+  "achievements": [],
+  "audit_logs": [],
+  "rate_limits": []
+}

@@ -1,0 +1,21 @@
+moderator-only (0) - Parent: None
+👋・accueil (0) - Parent: None
+📢 BIENVENUE (4) - Parent: None
+📖・comment-ça-marche (0) - Parent: 📢 BIENVENUE
+🌱 COMMUNAUTÉ (4) - Parent: None
+🤝・invite-des-monteurs (0) - Parent: 🌱 COMMUNAUTÉ
+🚜・FARMING (4) - Parent: None
+🎯・missions-hebdo (0) - Parent: 🚜・FARMING
+💬・questions (0) - Parent: 🚜・FARMING
+👑 ELITE (4) - Parent: None
+💎・salon-vip (0) - Parent: 👑 ELITE
+📋・admin (0) - Parent: None
+💰・comment-être-payé (0) - Parent: 🌱 COMMUNAUTÉ
+🎙️ VOCAL (4) - Parent: None
+🎙️ Bureau Admin (2) - Parent: 🎙️ VOCAL
+📞 Réunion (2) - Parent: 🎙️ VOCAL
+🗣️ Salon Communautaire (2) - Parent: 🎙️ VOCAL
+10/02 à 19H00 : LANCEMENT (13) - Parent: None
+🏢 ADMIN & MANAGEMENT (4) - Parent: None
+🆘・problèmes-support (0) - Parent: 🏢 ADMIN & MANAGEMENT
+📱・tracking-comptes (0) - Parent: 🏢 ADMIN & MANAGEMENT

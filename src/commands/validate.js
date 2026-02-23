@@ -27,7 +27,7 @@ module.exports = {
         const feedback = interaction.options.getString('feedback') || 'Pas de commentaire';
         const analyse = interaction.options.getString('analyse');
 
-        const submission = getSubmission(id);
+        const submission = await getSubmission(id);
 
         if (!submission) {
             return interaction.reply({ embeds: [embeds.error('Erreur', 'Soumission introuvable')], ephemeral: true });
@@ -42,17 +42,17 @@ module.exports = {
         const pointsEarned = gradeData.points;
 
         // Valider la soumission (On garde les points, pas l'argent direct)
-        validateSubmission(id, grade, pointsEarned, feedback, interaction.user.id);
+        await validateSubmission(id, grade, pointsEarned, feedback, interaction.user.id);
 
         // Mettre à jour les stats de l'utilisateur
-        updateUserPoints(submission.user_id, pointsEarned);
-        incrementClipsCompleted(submission.user_id);
+        await updateUserPoints(submission.user_id, pointsEarned);
+        await incrementClipsCompleted(submission.user_id);
 
         // Marquer la mission comme complétée
-        completeMission(submission.mission_id);
+        await completeMission(submission.mission_id);
 
         // Vérifier si c'est la première mission validée (pour parrainage)
-        const userSubmissions = getUserSubmissions(submission.user_id);
+        const userSubmissions = await getUserSubmissions(submission.user_id);
         const validatedMissions = userSubmissions.filter(s => s.grade && s.grade !== 'F');
         if (validatedMissions.length === 1) {
             // C'est sa première mission validée !
@@ -78,7 +78,7 @@ module.exports = {
         const newLevel = calculateLevel(user.points);
 
         if (newLevel !== user.level) {
-            updateUserLevel(submission.user_id, newLevel);
+            await updateUserLevel(submission.user_id, newLevel);
 
             // Annoncer la promotion
             const member = await interaction.guild.members.fetch(submission.user_id);

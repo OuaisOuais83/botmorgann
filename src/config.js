@@ -68,6 +68,7 @@ module.exports = {
         },
         welcome: [
             { name: '👋・accueil', type: 'text' },
+            { name: '📢・annonces-générales', type: 'text' },
             { name: '🌾・notre-vision', type: 'text' },
             { name: '🏆・hall-of-fame', type: 'text' }
         ],

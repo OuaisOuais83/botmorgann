@@ -12,7 +12,7 @@
 
 ### 🗃️ Base de données
 - [ ] **Vérification "Client" mission type** — S'assurer que le type de mission `Client` est bien reconnu et affiché dans `/mission list`
-- [ ] **Canal Annonces Générales** — Créer un canal `#annonces-générales` dédié aux communications importantes de l'équipe
+- [ ] **Canal Annonces Générales** — Créer un canal `#annonces-générales` dédié aux communications importantes (ajout dans `/setup` si besoin)
 
 ---
 
@@ -63,7 +63,7 @@
 
 ## 🔧 Améliorations Techniques
 
-- [ ] **Migration SQLite → PostgreSQL complète** — S'assurer que 100% des données sont bien migrées sans perte (vérification post-migration)
+- [x] **Migration SQLite/JSON → PostgreSQL complète** — ✅ Faite (Neon). Le bot utilise Postgres quand DATABASE_URL est défini.
 - [ ] **Script de vérification de santé (healthcheck)** — Endpoint HTTP ou commande admin `/health` pour vérifier que le bot, la DB et les canaux sont bien opérationnels
 - [ ] **Gestion des erreurs Discord améliorée** — Wrapper les appels Discord API avec retry automatique sur rate limit / timeout
 - [ ] **Tests automatisés** — Écrire des tests unitaires pour les fonctions clés de `db.js` et `notifications.js`

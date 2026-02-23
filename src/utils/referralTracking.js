@@ -8,8 +8,9 @@ async function setupInviteTracking(client) {
     // Cache des invitations actuelles
     const invites = new Map();
 
-    // Charger toutes les invitations au démarrage (client est déjà ready)
-    const guild = client.guilds.cache.first();
+    // Charger toutes les invitations du serveur principal (GUILD_ID)
+    const guildId = process.env.GUILD_ID;
+    const guild = guildId ? client.guilds.cache.get(guildId) : client.guilds.cache.first();
     if (!guild) {
         console.log('⚠️ Aucun serveur trouvé pour le tracking des invitations');
         return;
@@ -51,9 +52,13 @@ async function setupInviteTracking(client) {
             if (usedInvite) {
                 console.log(`🎯 Invitation utilisée détectée : ${usedInvite.code} par ${usedInvite.inviter?.tag}`);
 
-                // Trouver le parrain (celui qui a créé l'invitation)
+                // Trouver le parrain : 1) par code d'invitation, 2) fallback par inviter Discord
                 const allUsers = await db.getAllUsers();
-                const referrer = allUsers.find(u => u.referral_link === usedInvite.code);
+                let referrer = allUsers.find(u => u.referral_link === usedInvite.code);
+                if (!referrer && usedInvite.inviter?.id) {
+                    referrer = allUsers.find(u => u.user_id === usedInvite.inviter.id);
+                    if (referrer) console.log(`📌 Parrain trouvé via inviter ID (fallback): ${referrer.username}`);
+                }
 
                 if (referrer) {
                     console.log(`✅ Parrain identifié dans la DB : ${referrer.username} (${referrer.user_id})`);

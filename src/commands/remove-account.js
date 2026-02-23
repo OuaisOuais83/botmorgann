@@ -20,7 +20,7 @@ module.exports = {
             const platform = interaction.options.getString('plateforme');
             const handle = interaction.options.getString('handle');
 
-            const success = database.removeSocialAccount(interaction.user.id, platform, handle);
+            const success = await database.removeSocialAccount(interaction.user.id, platform, handle);
 
             if (success) {
                 await interaction.reply({

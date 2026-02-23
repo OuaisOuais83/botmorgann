@@ -32,22 +32,16 @@ Pour que je puisse **tout automatiser**, tu dois obtenir un token API Railway. C
 - Copie le token (il ressemble à : `railway_xxx...`)
 - **GARDE-LE SECRET** (c'est comme un mot de passe)
 
-### 5. Me Donner le Token
+### 5. Utiliser le Token (sans le partager)
 
-**Colle le token dans le chat** et je vais :
-1. ✅ Configurer automatiquement Railway CLI
-2. ✅ Créer le projet
-3. ✅ Configurer les variables d'environnement
-4. ✅ Déployer le bot
-5. ✅ Vérifier que tout fonctionne
+⚠️ **Ne colle JAMAIS ton token dans un chat** — c'est un secret comme un mot de passe !
 
----
+Pour déployer :
+1. Ouvre un terminal dans le dossier du projet
+2. Tape `$env:RAILWAY_TOKEN="ton_token_ici"` (PowerShell) pour la session
+3. Puis `railway up --service botmorgann`
 
-## 🔒 Sécurité
-
-- Le token ne sera **jamais sauvegardé** dans le code
-- Il sera utilisé uniquement pour cette session de déploiement
-- Tu pourras le révoquer après sur Railway si tu veux
+Ou utilise `railway login` qui ouvre le navigateur (aucun token à copier).
 
 ---
 
@@ -62,4 +56,4 @@ Pour que je puisse **tout automatiser**, tu dois obtenir un token API Railway. C
 
 ---
 
-**Une fois que tu as le token, colle-le ici et je fais TOUT le reste automatiquement ! 🚀**
+**Utilise `railway login` pour te connecter sans partager de token.**

@@ -25,7 +25,7 @@ module.exports = {
             let user = await db.getUser(userId);
             if (!user) {
                 console.log(`➕ Création nouvel utilisateur: ${username}`);
-                user = db.createUser(userId, username);
+                user = await db.createUser(userId, username);
             }
 
             // Si l'utilisateur a déjà un lien de parrainage, le retourner
@@ -83,7 +83,7 @@ module.exports = {
             console.log(`✅ Invitation créée: ${invite.code}`);
 
             // Stocker le code d'invitation dans la DB
-            db.updateUserReferralLink(userId, invite.code);
+            await db.updateUserReferralLink(userId, invite.code);
             console.log(`💾 Lien sauvegardé en base de données`);
 
             const inviteUrl = `https://discord.gg/${invite.code}`;

@@ -9,9 +9,10 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction) {
-        // Confirmation de sécurité
-        if (interaction.user.id !== process.env.CLIENT_ID && interaction.user.id !== interaction.guild.ownerId) {
-            // Optionnel: restreindre encore plus
+        // Restreindre aux admins (ADMIN_ID ou propriétaire du serveur)
+        const isAdmin = interaction.user.id === process.env.ADMIN_ID || interaction.user.id === interaction.guild.ownerId;
+        if (!isAdmin) {
+            return interaction.reply({ content: '❌ Accès refusé. Réservé au propriétaire du serveur.', ephemeral: true });
         }
 
         await interaction.deferReply({ ephemeral: true });

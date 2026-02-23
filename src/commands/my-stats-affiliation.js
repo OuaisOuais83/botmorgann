@@ -9,7 +9,7 @@ module.exports = {
 
     async execute(interaction) {
         try {
-            const accounts = database.getSocialAccounts(interaction.user.id);
+            const accounts = await database.getSocialAccounts(interaction.user.id);
 
             if (accounts.length === 0) {
                 return interaction.reply({

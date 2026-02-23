@@ -25,7 +25,7 @@ module.exports = {
             }
 
             // Récupérer les parrainages
-            const referrals = db.getReferralsByUser(userId);
+            const referrals = await db.getReferralsByUser(userId);
 
             // Filtrer par statut
             const activeReferrals = referrals.filter(r => r.status === 'active');

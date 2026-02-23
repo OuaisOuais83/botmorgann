@@ -141,7 +141,7 @@ module.exports = {
 
                     // Mettre à jour la DB
                     console.log('[DEBUG] Appel updateSocialAccount...');
-                    const updated = database.updateSocialAccount(
+                    const updated = await database.updateSocialAccount(
                         interaction.user.id,
                         selectedHandle, // L'ancien handle pour trouver le compte
                         newPlatform,

@@ -14,7 +14,7 @@
 Ouvre ton terminal PowerShell dans le dossier du bot et tape :
 
 ```powershell
-cd C:\Users\Ganou\.gemini\antigravity\scratch\casino-discord-bot
+cd c:\Users\Stive\botmorgann
 railway login
 ```
 
@@ -40,7 +40,10 @@ railway init
 
 ```powershell
 railway variables set DISCORD_TOKEN="TON_TOKEN_DISCORD_ICI"
+railway variables set CLIENT_ID="ID_APPLICATION_DISCORD"
+railway variables set GUILD_ID="ID_SERVEUR_DISCORD"
 railway variables set ADMIN_ID="TON_ID_DISCORD_ICI"
+railway variables set DATABASE_URL="postgresql://..." 
 railway variables set NODE_ENV="production"
 ```
 

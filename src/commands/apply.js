@@ -32,7 +32,7 @@ module.exports = {
         if (existingUser) {
             // Double vérification : check aussi les candidatures directement
             const db = require('../database/db');
-            const applications = db.getApplications();
+            const applications = await db.getAllApplications();
             const userApplication = applications.find(app => app.user_id === interaction.user.id);
 
             console.log(`[/apply] Application trouvée:`, userApplication ? 'OUI' : 'NON');

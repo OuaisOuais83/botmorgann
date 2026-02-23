@@ -475,7 +475,7 @@ const dbFunctions = {
             referrer_id: referrerId,
             referrer_username: referrerUsername,
             referred_id: referredId,
-            referred_username: referrerUsername,
+            referred_username: referredUsername,
             invited_at: new Date().toISOString(),
             status: 'pending',
             points_earned: 0,

@@ -2,6 +2,7 @@
 .env
 node_modules/
 casino_bot.db
+farmer_league_bot.json
 *.log
 .DS_Store
 create-github-repo.js 

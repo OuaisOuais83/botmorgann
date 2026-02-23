@@ -52,14 +52,14 @@ async function setupInviteTracking(client) {
                 console.log(`🎯 Invitation utilisée détectée : ${usedInvite.code} par ${usedInvite.inviter?.tag}`);
 
                 // Trouver le parrain (celui qui a créé l'invitation)
-                const allUsers = db.getAllUsers();
+                const allUsers = await db.getAllUsers();
                 const referrer = allUsers.find(u => u.referral_link === usedInvite.code);
 
                 if (referrer) {
                     console.log(`✅ Parrain identifié dans la DB : ${referrer.username} (${referrer.user_id})`);
 
                     // Créer l'entrée de parrainage via db.js pour maintenir la cohérence
-                    const referral = db.createReferral(
+                    const referral = await db.createReferral(
                         referrer.user_id,
                         referrer.username,
                         member.user.id,
@@ -104,16 +104,16 @@ async function setupInviteTracking(client) {
 async function onApplicationApproved(userId, client) {
     try {
         // Chercher si cet utilisateur a été parrainé
-        const referral = db.getReferralByReferred(userId);
+        const referral = await db.getReferralByReferred(userId);
 
         if (referral && referral.status === 'pending') {
             // Mettre à jour le statut
             if (referral) {
                 // Utiliser db.updateReferralStatus pour la cohérence
-                db.updateReferralStatus(referral.id, 'validated', 50);
+                await db.updateReferralStatus(referral.id, 'validated', 50);
 
                 // Mettre à jour l'utilisateur parrain de façon atomique (FIX)
-                db.updateUserReferralStats(referral.referrer_id, 50, 0);
+                await db.updateUserReferralStats(referral.referrer_id, 50, 0);
 
                 const referrer = await db.getUser(referral.referrer_id);
                 if (referrer) {
@@ -143,17 +143,17 @@ async function onApplicationApproved(userId, client) {
 // Fonction à appeler quand un filleul complète sa première mission
 async function onFirstMissionCompleted(userId, client) {
     try {
-        const referral = db.getReferralByReferred(userId);
+        const referral = await db.getReferralByReferred(userId);
 
         if (referral && referral.status === 'validated' && !referral.first_mission_at) {
             // Mettre à jour le statut
             if (referral) {
                 // Utiliser db.updateReferralStatus
-                db.updateReferralStatus(referral.id, 'active', 100);
+                await db.updateReferralStatus(referral.id, 'active', 100);
 
                 // Mettre à jour l'utilisateur parrain de façon atomique (FIX)
                 // +100 points, +1 referral count (actif)
-                db.updateUserReferralStats(referral.referrer_id, 100, 1);
+                await db.updateUserReferralStats(referral.referrer_id, 100, 1);
 
                 const referrer = await db.getUser(referral.referrer_id);
                 if (referrer) {

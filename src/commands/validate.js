@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { getSubmission, validateSubmission, updateUserPoints, updateUserEarnings, incrementClipsCompleted, completeMission, getUser, updateUserLevel, getUserSubmissions } = require('../database/db');
+const { getSubmission, validateSubmission, updateUserPoints, updateUserEarnings, incrementClipsCompleted, completeMission, getUser, updateUserLevel, getUserSubmissions } = require('../database');
 const config = require('../config');
 const embeds = require('../utils/embeds');
 const { onFirstMissionCompleted } = require('../utils/referralTracking');

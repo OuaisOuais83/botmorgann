@@ -1,7 +1,7 @@
 // Système de tracking automatique des parrainages via invitations Discord
 
 const { Events } = require('discord.js');
-const db = require('../database/db');
+const db = require('../database');
 
 // Fonction pour tracker les invitations (à ajouter dans index.js)
 async function setupInviteTracking(client) {

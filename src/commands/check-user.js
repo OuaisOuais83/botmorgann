@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const database = require('../database/db');
+const database = require('../database');
 const embeds = require('../utils/embeds');
 const security = require('../utils/security');
 

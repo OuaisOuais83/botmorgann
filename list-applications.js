@@ -1,8 +1,7 @@
-const db = require('./src/database/db');
+const db = require('./src/database');
 
 async function listPending() {
-    await db.initDatabase();
-    const apps = db.getAllApplications();
+    const apps = await db.getAllApplications();
 
     console.log(`📋 Total Candidatures: ${apps.length}`);
 

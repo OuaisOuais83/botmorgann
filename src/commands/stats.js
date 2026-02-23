@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
-const { getUser, createUser } = require('../database/db');
+const { getUser, createUser } = require('../database');
 const embeds = require('../utils/embeds');
 const path = require('path');
 

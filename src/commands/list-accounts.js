@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const database = require('../database/db');
+const database = require('../database');
 const embeds = require('../utils/embeds');
 const security = require('../utils/security');
 
@@ -19,7 +19,7 @@ module.exports = {
         }
 
         try {
-            const allAccounts = database.getAllSocialAccounts();
+            const allAccounts = await database.getAllSocialAccounts();
             console.log(`[DEBUG LIST] All Accounts Raw:`, JSON.stringify(allAccounts, null, 2));
 
             if (!allAccounts || allAccounts.length === 0) {

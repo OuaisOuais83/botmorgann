@@ -1,15 +1,15 @@
-
 const { Pool } = require('pg');
 
 let pool;
 
-if (process.env.DATABASE_URL) {
-    const dbUrl = process.env.DATABASE_URL;
+const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+if (dbUrl) {
     const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ':****@');
     console.log(`🔌 Tentative de connexion PostgreSQL: ${maskedUrl}`);
 
     pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
+        connectionString: dbUrl,
         ssl: {
             rejectUnauthorized: false
         },
@@ -331,26 +331,32 @@ async function getSocialAccounts(userId) {
         followers: row.followers,
         tapitLink: row.tapit_link,
         status: row.status,
+        declaredAt: row.declared_at,
         updatedAt: row.updated_at
     }));
 }
 
 async function addSocialAccount(userId, platform, handle, profileLink, followers) {
-    const query = `
-        INSERT INTO social_accounts (user_id, platform, handle, profile_link, followers, status, declared_at)
-        VALUES ($1, $2, $3, $4, $5, 'pending_link', NOW())
-        RETURNING *;
-    `;
-    const res = await pool.query(query, [userId, platform, handle, profileLink, followers]);
-    const row = res.rows[0];
-    return {
-        id: row.id.toString(),
-        platform: row.platform,
-        handle: row.handle,
-        profileLink: row.profile_link,
-        followers: row.followers,
-        status: row.status
-    };
+    try {
+        const query = `
+            INSERT INTO social_accounts (user_id, platform, handle, profile_link, followers, status, declared_at)
+            VALUES ($1, $2, $3, $4, $5, 'pending_link', NOW())
+            RETURNING *;
+        `;
+        const res = await pool.query(query, [userId, platform, handle, profileLink, followers || 0]);
+        const row = res.rows[0];
+        return {
+            id: row.id.toString(),
+            platform: row.platform,
+            handle: row.handle,
+            profileLink: row.profile_link,
+            followers: row.followers,
+            status: row.status
+        };
+    } catch (err) {
+        if (err.code === '23505') throw new Error('Ce compte existe déjà');
+        throw err;
+    }
 }
 
 async function updateSocialAccount(userId, oldHandle, newPlatform, newHandle, newLink, newFollowers) {
@@ -360,8 +366,18 @@ async function updateSocialAccount(userId, oldHandle, newPlatform, newHandle, ne
         WHERE user_id = $5 AND handle = $6
         RETURNING *;
     `;
-    const res = await pool.query(query, [newPlatform, newHandle, newLink, newFollowers, userId, oldHandle]);
-    return res.rows[0] ? true : false;
+    const res = await pool.query(query, [newPlatform, newHandle, newLink, newFollowers || 0, userId, oldHandle]);
+    const row = res.rows[0];
+    if (!row) return false;
+    return {
+        id: row.id.toString(),
+        platform: row.platform,
+        handle: row.handle,
+        profileLink: row.profile_link,
+        followers: row.followers,
+        tapitLink: row.tapit_link,
+        status: row.status
+    };
 }
 
 async function updateTapitLink(userId, platform, handle, tapitLink) {
@@ -388,7 +404,10 @@ async function getAllSocialAccounts() {
                    'platform', s.platform, 
                    'handle', s.handle, 
                    'profileLink', s.profile_link,
-                   'followers', s.followers
+                   'followers', s.followers,
+                   'tapitLink', s.tapit_link,
+                   'status', s.status,
+                   'declaredAt', s.declared_at
                )) as accounts
         FROM users u
         JOIN social_accounts s ON u.user_id = s.user_id
@@ -398,7 +417,7 @@ async function getAllSocialAccounts() {
     return res.rows.map(row => ({
         userId: row.user_id,
         username: row.username,
-        accounts: row.accounts
+        accounts: row.accounts || []
     }));
 }
 
@@ -624,6 +643,29 @@ async function getAuditLogsByAction(actionType) {
     return res.rows;
 }
 
+async function resetAll() {
+    if (!pool) return;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query('TRUNCATE social_accounts CASCADE');
+        await client.query('UPDATE users SET referral_count = 0');
+        await client.query('TRUNCATE referrals CASCADE');
+        await client.query('COMMIT');
+        console.log('🧹 RESET: comptes sociaux et referrals supprimés.');
+    } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+    } finally {
+        client.release();
+    }
+}
+
+// Alias pour compatibilité avec db.js (initDatabase reçoit client mais on l'ignore en Postgres)
+async function initDatabase(client) {
+    return initPostgres();
+}
+
 module.exports = {
     initPostgres,
     getUser,
@@ -670,6 +712,8 @@ module.exports = {
     getRecentAuditLogs,
     getAuditLogsByAdmin,
     getAuditLogsByAction,
-    backupDatabase: () => true, // No-op
-    saveDatabase: () => true // No-op
+    initDatabase,
+    resetAll,
+    backupDatabase: () => true, // No-op (Neon gère les sauvegardes)
+    saveDatabase: () => true   // No-op
 };

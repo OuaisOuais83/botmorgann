@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const db = require('../src/database/db');
+const db = require('../src/database');
 require('dotenv').config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });

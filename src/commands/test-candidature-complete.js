@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { createApplication } = require('../database/db');
+const { createApplication } = require('../database');
 const notifications = require('../utils/notifications');
 
 module.exports = {

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const database = require('../database/db');
+const database = require('../database');
 const embeds = require('../utils/embeds');
 
 module.exports = {
@@ -15,7 +15,7 @@ module.exports = {
     async execute(interaction) {
         try {
             const targetUser = interaction.options.getUser('user');
-            const accounts = database.getSocialAccounts(targetUser.id);
+            const accounts = await database.getSocialAccounts(targetUser.id);
 
             if (accounts.length === 0) {
                 return interaction.reply({

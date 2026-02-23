@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
-const { initDatabase } = require('./database/db');
+const database = require('./database');
 const cron = require('node-cron');
 const config = require('./config');
 
@@ -59,8 +59,8 @@ client.once('ready', async () => {
     });
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    // Initialiser la base de données (avec le client pour la sauvegarde Discord)
-    await initDatabase(client);
+    // Initialiser la base de données (Postgres si DATABASE_URL, sinon JSON+Discord)
+    await database.initDatabase(client);
 
     // Enregistrer les commandes slash
     await registerCommands();
@@ -214,10 +214,10 @@ function startAutomations() {
         updateDailyLeaderboard();
     });
 
-    // Sauvegarde de sécurité quotidienne à 4h du matin
+    // Sauvegarde de sécurité quotidienne à 4h (no-op si Postgres, backup Discord si JSON)
     cron.schedule('0 4 * * *', () => {
-        const { backupDatabase } = require('./database/db');
-        backupDatabase();
+        const db = require('./database');
+        db.backupDatabase();
     });
 
     console.log('⏰ Automatisations programmées:\n   - Motivation quotidienne: 8h00\n   - Leaderboard quotidien: 20h00\n   - Sauvegarde de sécurité: 4h00\n');

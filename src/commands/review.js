@@ -44,7 +44,7 @@ module.exports = {
         }
 
         const subcommand = interaction.options.getSubcommand();
-        const db = require('../database/db'); // Chargement dynamique
+        const db = require('../database');
 
         // --- SOUS-COMMANDE : LISTE ---
         if (subcommand === 'liste') {

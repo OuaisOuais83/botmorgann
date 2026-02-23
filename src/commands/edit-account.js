@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ComponentType } = require('discord.js');
-const database = require('../database/db');
+const database = require('../database');
 const embeds = require('../utils/embeds');
 const config = require('../config');
 

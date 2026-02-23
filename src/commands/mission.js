@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, AttachmentBuilder } = require('discord.js');
-const { createMission, getAvailableMissions, assignMission, createSubmission, getMission, getUser } = require('../database/db');
+const { createMission, getAvailableMissions, assignMission, createSubmission, getMission, getUser, createUser } = require('../database');
 const embeds = require('../utils/embeds');
 const security = require('../utils/security');
 const path = require('path');
@@ -58,7 +58,7 @@ module.exports = {
             const type = interaction.options.getString('type') || 'standard';
             const deadline = interaction.options.getString('deadline') || 'Flexible';
 
-            createMission(titre, description, type, points, deadline, interaction.user.id);
+            await createMission(titre, description, type, points, deadline, interaction.user.id);
 
             const clipsChannel = interaction.guild.channels.cache.find(ch => ch.name.includes('missions-hebdo'));
             if (clipsChannel) {
@@ -74,7 +74,7 @@ module.exports = {
             await interaction.reply({ embeds: [embeds.success('Mission créée', `La mission communautaire "${titre}" a été postée dans le canal practice !`)] });
 
         } else if (subcommand === 'list') {
-            const missions = getAvailableMissions();
+            const missions = await getAvailableMissions();
 
             if (missions.length === 0) {
                 return interaction.reply({ embeds: [embeds.info('Aucune mission', 'Pas de missions disponibles pour le moment.')], ephemeral: true });
@@ -103,14 +103,14 @@ module.exports = {
                 const projectRoles = ['🥉 Rookie', '🥈 Hustler', '🥇 Grinder', '💎 Elite'];
                 const hasRole = interaction.member.roles.cache.some(r => projectRoles.includes(r.name));
                 if (hasRole) {
-                    userData = createUser(interaction.user.id, interaction.user.username);
+                    userData = await createUser(interaction.user.id, interaction.user.username);
                 } else {
                     return interaction.reply({ embeds: [embeds.error('Accès refusé', 'Tu dois être membre (Rookie+) pour prendre des missions. Utilise `/apply`.')], ephemeral: true });
                 }
             }
 
             const id = interaction.options.getInteger('id');
-            const mission = getMission(id);
+            const mission = await getMission(id);
 
             if (!mission) {
                 return interaction.reply({ embeds: [embeds.error('Erreur', 'Mission introuvable')], ephemeral: true });
@@ -120,7 +120,7 @@ module.exports = {
                 return interaction.reply({ embeds: [embeds.error('Erreur', 'Mission déjà prise')], ephemeral: true });
             }
 
-            assignMission(id, interaction.user.id);
+            await assignMission(id, interaction.user.id);
 
             await interaction.reply({
                 embeds: [embeds.success(
@@ -142,7 +142,7 @@ module.exports = {
                 });
             }
 
-            const mission = getMission(id);
+            const mission = await getMission(id);
 
             if (!mission) {
                 return interaction.reply({ embeds: [embeds.error('Erreur', 'Mission introuvable')], ephemeral: true });
@@ -158,11 +158,11 @@ module.exports = {
                 const projectRoles = ['🥉 Rookie', '🥈 Hustler', '🥇 Grinder', '💎 Elite'];
                 const hasRole = interaction.member.roles.cache.some(r => projectRoles.includes(r.name));
                 if (hasRole) {
-                    userData = createUser(interaction.user.id, interaction.user.username);
+                    userData = await createUser(interaction.user.id, interaction.user.username);
                 }
             }
 
-            createSubmission(id, interaction.user.id, lien);
+            await createSubmission(id, interaction.user.id, lien);
 
             const validationChannel = interaction.guild.channels.cache.find(ch => ch.name.includes('validation-clips'));
             if (validationChannel) {

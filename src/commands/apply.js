@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
-const { createApplication, getUser } = require('../database/db');
+const { createApplication, getUser } = require('../database');
 const embeds = require('../utils/embeds');
 const security = require('../utils/security');
 
@@ -31,7 +31,7 @@ module.exports = {
 
         if (existingUser) {
             // Double vérification : check aussi les candidatures directement
-            const db = require('../database/db');
+            const db = require('../database');
             const applications = await db.getAllApplications();
             const userApplication = applications.find(app => app.user_id === interaction.user.id);
 

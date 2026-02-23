@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { getUser, createPaymentRequest, getUserPayments, approvePayment, createAuditLog } = require('../database/db');
+const { getUser, createPaymentRequest, getUserPayments, approvePayment, createAuditLog } = require('../database');
 const config = require('../config');
 const embeds = require('../utils/embeds');
 const security = require('../utils/security');

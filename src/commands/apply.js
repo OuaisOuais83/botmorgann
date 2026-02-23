@@ -22,13 +22,64 @@ module.exports = {
             });
         }
 
-        // Vérifier si l'utilisateur n'est pas déjà dans la DB
+        // VÉRIFICATION BULLETPROOF : Double check pour éviter les faux positifs
         const existingUser = await getUser(interaction.user.id);
+
+        // Log pour debug (visible dans Railway logs)
+        console.log(`[/apply] Vérification pour ${interaction.user.username} (${interaction.user.id})`);
+        console.log(`[/apply] Résultat getUser:`, existingUser ? 'TROUVÉ' : 'NON TROUVÉ');
+
         if (existingUser) {
-            return interaction.reply({
-                embeds: [embeds.error('Déjà membre', 'Tu fais déjà partie de l\'équipe!')],
-                ephemeral: true
-            });
+            // Double vérification : check aussi les candidatures directement
+            const db = require('../database/db');
+            const applications = db.getApplications();
+            const userApplication = applications.find(app => app.user_id === interaction.user.id);
+
+            console.log(`[/apply] Application trouvée:`, userApplication ? 'OUI' : 'NON');
+            console.log(`[/apply] Statut:`, userApplication?.status || 'N/A');
+
+            // Vérifier le statut via les rôles Discord
+            const isApproved = interaction.member.roles.cache.some(role =>
+                ['Rookie', 'Hustler', 'Grinder', 'Elite'].some(rank => role.name.includes(rank))
+            );
+
+            console.log(`[/apply] Rôle approuvé sur Discord:`, isApproved ? 'OUI' : 'NON');
+
+            if (isApproved) {
+                // Utilisateur déjà validé et actif
+                console.log(`[/apply] ✅ Bloqué (déjà membre actif) : ${interaction.user.username}`);
+                return interaction.reply({
+                    embeds: [embeds.success(
+                        'Déjà membre! 🎉',
+                        `Tu fais déjà partie de l'équipe Farmer League!\\n\\n` +
+                        `**Ton statut :** ${existingUser.role || 'Rookie'}\\n` +
+                        `**Points :** ${existingUser.points || 0} pts\\n\\n` +
+                        `Utilise \`/stats\` pour voir ton profil complet! 📊`
+                    )],
+                    ephemeral: true
+                });
+            } else if (userApplication && userApplication.status === 'pending') {
+                // Candidature en attente (vérification supplémentaire)
+                console.log(`[/apply] ⚠️ Bloqué (candidature en attente) : ${interaction.user.username}`);
+                return interaction.reply({
+                    embeds: [embeds.warning(
+                        'Candidature déjà envoyée',
+                        `Tu as déjà postulé! 📋\\n\\n` +
+                        `**Si tu veux modifier ta candidature ou demander un suivi :**\\n` +
+                        `→ Contacte un <@&${interaction.guild.roles.cache.find(r => r.name.includes('Admin'))?.id || 'admin'}> en message privé\\n\\n` +
+                        `Les admins examinent chaque candidature avec attention. Patience! ⏳`
+                    )],
+                    ephemeral: true
+                });
+            } else {
+                // CAS ÉTRANGE : User existe mais pas de rôle ni candidature pending
+                // ON LAISSE PASSER pour éviter de bloquer un vrai candidat !
+                console.log(`[/apply] ⚠️ ANOMALIE DÉTECTÉE - Mais on laisse passer par sécurité : ${interaction.user.username}`);
+                console.log(`[/apply] → User existe dans DB mais pas de rôle ni candidature pending`);
+                // On continue vers le formulaire (ligne suivante)
+            }
+        } else {
+            console.log(`[/apply] ✅ Nouveau candidat détecté : ${interaction.user.username}`);
         }
 
         // Créer le modal de candidature

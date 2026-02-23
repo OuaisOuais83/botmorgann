@@ -155,6 +155,25 @@ client.on('interactionCreate', async interaction => {
     }
 
     if (interaction.isModalSubmit()) {
+        // Handler pour le modal de test (test-apply)
+        if (interaction.customId === 'test-application-modal') {
+            const instagram = interaction.fields.getTextInputValue('instagram');
+            const portfolio = interaction.fields.getTextInputValue('portfolio');
+            const experience = interaction.fields.getTextInputValue('experience');
+
+            await interaction.reply({
+                content:
+                    `✅ **TEST RÉUSSI !** Le formulaire /apply fonctionne correctement.\\n\\n` +
+                    `**Données reçues :**\\n` +
+                    `→ Instagram: ${instagram}\\n` +
+                    `→ Portfolio: ${portfolio}\\n` +
+                    `→ Expérience: ${experience ? experience.substring(0, 50) : 'N/A'}...\\n\\n` +
+                    `*Aucune candidature n'a été créée (mode test)*`,
+                ephemeral: true
+            });
+            console.log(`✅ [TEST-APPLY] Test réussi par ${interaction.user.tag}`);
+            return;
+        }
         // Géré dans les commandes individuelles
     }
 });

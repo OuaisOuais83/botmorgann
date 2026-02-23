@@ -4,3 +4,4 @@ node_modules/
 casino_bot.db
 *.log
 .DS_Store
+create-github-repo.js 

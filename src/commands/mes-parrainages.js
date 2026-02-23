@@ -63,11 +63,12 @@ module.exports = {
 
             // Afficher les filleuls actifs
             if (activeReferrals.length > 0) {
-                const activeList = activeReferrals.slice(0, 5).map(r => {
+                const activePromises = activeReferrals.slice(0, 5).map(async (r) => {
                     const referredUser = await db.getUser(r.referred_id);
                     const points = referredUser ? referredUser.points : 0;
                     return `**${r.referred_username}** - ${points} pts (${r.points_earned || 0} pts gagnés)`;
-                }).join('\n');
+                });
+                const activeList = (await Promise.all(activePromises)).join('\n');
 
                 embed.addFields({
                     name: `🚀 Filleuls Actifs (${activeReferrals.length})`,

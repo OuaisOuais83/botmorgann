@@ -56,8 +56,8 @@ const notifications = {
             .setTitle('📝 Nouvelle Candidature')
             .setDescription(`**Candidat:** ${user} (\`${user.id}\`)`)
             .addFields(
-                { name: 'Expérience', value: application.experience.substring(0, 1024) },
-                { name: 'Portfolio', value: application.portfolio.substring(0, 1024) },
+                { name: 'Expérience', value: (application.experience || 'Non fourni').substring(0, 1024) },
+                { name: 'Portfolio', value: (application.portfolio || 'Non fourni').substring(0, 1024) },
                 { name: 'Action Requise', value: 'Utilisez `/review list` ou `/review approve ' + application.id + '`' }
             )
             .setTimestamp();

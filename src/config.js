@@ -22,6 +22,7 @@ module.exports = {
         hustler: { name: '🥈 Hustler', color: 0xC0C0C0, hoisted: true },
         rookie: { name: '🥉 Rookie', color: 0xCD7F32, hoisted: true },
         founding: { name: '🌾 Founding Member', color: 0xFFD700, hoisted: true },
+        badge10Clips: { name: '🔥 10 Clips Semaine', color: 0xFF6B00, hoisted: false },
         champion: { name: '🏆 Champion', color: 0x00E676, hoisted: true },
         applicant: { name: '📋 Candidat', color: 0x607D8B, hoisted: false }
     },
@@ -64,7 +65,8 @@ module.exports = {
             money: '━━━ 💰 RÉMUNÉRATION ━━━',
             elite: '━━━ 👑 ZONE ELITE ━━━',
             management: '━━━ 🏢 MANAGEMENT ━━━',
-            vocal: '━━━ 🎙️ VOCAL ━━━'
+            vocal: '━━━ 🎙️ VOCAL ━━━',
+            tickets: '━━━ 🎫 CANDIDATURES ━━━'
         },
         welcome: [
             { name: '👋・accueil', type: 'text' },
@@ -94,6 +96,7 @@ module.exports = {
             { name: '💎・salon-vip', type: 'text' },
             { name: '🎯・missions-premium', type: 'text' }
         ],
+        tickets: [],
         management: [
             { name: '📋・admin-général', type: 'text' },
             { name: '🆘・problèmes-support', type: 'text' },

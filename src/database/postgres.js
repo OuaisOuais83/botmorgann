@@ -80,9 +80,11 @@ async function initPostgres() {
                 status VARCHAR(50) DEFAULT 'pending',
                 applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 reviewed_at TIMESTAMP,
-                reviewed_by VARCHAR(255)
+                reviewed_by VARCHAR(255),
+                channel_id VARCHAR(255)
             );
         `);
+        await client.query('ALTER TABLE applications ADD COLUMN IF NOT EXISTS channel_id VARCHAR(255)');
 
         // Missions
         await client.query(`
@@ -320,6 +322,40 @@ async function getTopUsers(limit = 10) {
     return res.rows;
 }
 
+async function getUsersWith10ClipsThisWeek() {
+    const res = await pool.query(`
+        SELECT user_id FROM submissions
+        WHERE validated_at >= NOW() - INTERVAL '7 days' AND grade IS NOT NULL AND grade != 'F'
+        GROUP BY user_id
+        HAVING COUNT(*) >= 10
+    `);
+    return res.rows.map(r => r.user_id);
+}
+
+async function getFoundingMembers() {
+    const foundingDate = new Date('2026-01-15');
+    const res = await pool.query(
+        "SELECT user_id FROM users WHERE joined_at IS NOT NULL AND joined_at <= $1",
+        [foundingDate.toISOString()]
+    );
+    return res.rows.map(r => r.user_id);
+}
+
+async function getTopUsersThisWeek(limit = 10) {
+    const query = `
+        SELECT u.user_id, u.username, u.level, u.clips_completed,
+               COALESCE(SUM(s.points_earned), 0)::INTEGER as points
+        FROM users u
+        LEFT JOIN submissions s ON u.user_id = s.user_id AND s.validated_at >= NOW() - INTERVAL '7 days' AND s.grade IS NOT NULL AND s.grade != 'F'
+        GROUP BY u.user_id, u.username, u.level, u.clips_completed
+        HAVING COALESCE(SUM(s.points_earned), 0) > 0
+        ORDER BY points DESC
+        LIMIT $1
+    `;
+    const res = await pool.query(query, [limit]);
+    return res.rows;
+}
+
 // SOCIAL ACCOUNTS
 async function getSocialAccounts(userId) {
     const res = await pool.query('SELECT * FROM social_accounts WHERE user_id = $1', [userId]);
@@ -421,15 +457,50 @@ async function getAllSocialAccounts() {
     }));
 }
 
-// APPLICATIONS
-async function createApplication(userId, username, experience, portfolio, motivation) {
+async function getAffiliationDashboardData() {
     const query = `
-        INSERT INTO applications (user_id, username, experience, portfolio, motivation, status, applied_at)
-        VALUES ($1, $2, $3, $4, $5, 'pending', NOW())
+        SELECT u.user_id, u.username, u.referral_count, u.referral_points, u.total_earnings,
+               (SELECT COALESCE(json_agg(json_build_object('platform', s.platform, 'handle', s.handle, 'tapitLink', s.tapit_link, 'status', s.status)), '[]'::json)
+                FROM social_accounts s WHERE s.user_id = u.user_id) as accounts
+        FROM users u
+        ORDER BY u.total_earnings DESC NULLS LAST, u.referral_count DESC
+    `;
+    const res = await pool.query(query);
+    return res.rows.map(row => ({
+        userId: row.user_id,
+        username: row.username,
+        referralCount: parseInt(row.referral_count) || 0,
+        referralPoints: parseInt(row.referral_points) || 0,
+        totalEarnings: parseInt(row.total_earnings) || 0,
+        accounts: Array.isArray(row.accounts) ? row.accounts.filter(a => a && a.platform) : (row.accounts || [])
+    }));
+}
+
+// APPLICATIONS
+async function createApplication(userId, username, experience, portfolio, motivation, channelId = null) {
+    const status = channelId ? 'ticket_open' : 'pending';
+    const query = `
+        INSERT INTO applications (user_id, username, experience, portfolio, motivation, status, applied_at, channel_id)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)
         RETURNING *;
     `;
-    const res = await pool.query(query, [userId, username, experience, portfolio, motivation]);
+    const res = await pool.query(query, [userId, username, experience, portfolio, motivation, status, channelId]);
     return res.rows[0];
+}
+
+async function updateApplication(id, data) {
+    const { experience, portfolio, motivation, status } = data;
+    const query = `
+        UPDATE applications SET experience = COALESCE($1, experience), portfolio = COALESCE($2, portfolio),
+        motivation = COALESCE($3, motivation), status = COALESCE($4, status) WHERE id = $5 RETURNING *;
+    `;
+    const res = await pool.query(query, [experience, portfolio, motivation, status, id]);
+    return res.rows[0];
+}
+
+async function getApplicationByChannelId(channelId) {
+    const res = await pool.query('SELECT * FROM applications WHERE channel_id = $1', [channelId]);
+    return res.rows[0] || null;
 }
 
 async function getApplication(id) {
@@ -439,6 +510,11 @@ async function getApplication(id) {
 
 async function getPendingApplications() {
     const res = await pool.query("SELECT * FROM applications WHERE status = 'pending' ORDER BY applied_at ASC");
+    return res.rows;
+}
+
+async function getPendingOrTicketOpenApplications() {
+    const res = await pool.query("SELECT * FROM applications WHERE status IN ('pending', 'ticket_open') ORDER BY applied_at ASC");
     return res.rows;
 }
 
@@ -677,14 +753,20 @@ module.exports = {
     updateUserReferralStats,
     getAllUsers,
     getTopUsers,
+    getTopUsersThisWeek,
+    getUsersWith10ClipsThisWeek,
+    getFoundingMembers,
     getSocialAccounts,
     addSocialAccount,
     updateSocialAccount,
     updateTapitLink,
     removeSocialAccount,
     getAllSocialAccounts,
+    getAffiliationDashboardData,
     createApplication,
+    updateApplication,
     getApplication,
+    getApplicationByChannelId,
     getPendingApplications,
     updateApplicationStatus,
     getAllApplications,

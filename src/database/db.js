@@ -186,7 +186,44 @@ const dbFunctions = {
 
     getTopUsers: async (limit = 10) => database.users.sort((a, b) => b.points - a.points).slice(0, limit),
 
-    createApplication: async (userId, username, experience, portfolio, motivation) => {
+    getUsersWith10ClipsThisWeek: async () => {
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const byUser = new Map();
+        for (const s of (database.submissions || [])) {
+            if (s.validated_at && s.grade && s.grade !== 'F' && new Date(s.validated_at) >= weekAgo) {
+                byUser.set(s.user_id, (byUser.get(s.user_id) || 0) + 1);
+            }
+        }
+        return [...byUser.entries()].filter(([, count]) => count >= 10).map(([uid]) => uid);
+    },
+
+    getFoundingMembers: async () => {
+        const foundingDate = new Date('2026-01-15');
+        return (database.users || [])
+            .filter(u => u.joined_at && new Date(u.joined_at) <= foundingDate)
+            .map(u => u.user_id);
+    },
+
+    getTopUsersThisWeek: async (limit = 10) => {
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const byUser = new Map();
+        for (const s of (database.submissions || [])) {
+            if (s.validated_at && s.grade && s.grade !== 'F' && new Date(s.validated_at) >= weekAgo) {
+                const pts = (byUser.get(s.user_id) || 0) + (s.points_earned || 0);
+                byUser.set(s.user_id, pts);
+            }
+        }
+        return [...byUser.entries()]
+            .map(([user_id, points]) => {
+                const u = database.users.find(x => x.user_id === user_id);
+                return u ? { ...u, points } : null;
+            })
+            .filter(Boolean)
+            .sort((a, b) => b.points - a.points)
+            .slice(0, limit);
+    },
+
+    createApplication: async (userId, username, experience, portfolio, motivation, channelId = null) => {
         const app = {
             id: getNextId('applications'),
             user_id: userId,
@@ -194,17 +231,32 @@ const dbFunctions = {
             experience: experience,
             portfolio: portfolio,
             motivation: motivation,
-            status: 'pending',
+            status: channelId ? 'ticket_open' : 'pending',
             applied_at: new Date().toISOString(),
             reviewed_at: null,
-            reviewed_by: null
+            reviewed_by: null,
+            channel_id: channelId
         };
         database.applications.push(app);
         saveDatabase();
         return app;
     },
 
+    updateApplication: async (id, data) => {
+        const app = database.applications.find(a => a.id === id);
+        if (app) {
+            if (data.experience != null) app.experience = data.experience;
+            if (data.portfolio != null) app.portfolio = data.portfolio;
+            if (data.motivation != null) app.motivation = data.motivation;
+            if (data.status != null) app.status = data.status;
+            saveDatabase();
+        }
+        return app;
+    },
+
     getApplication: async (id) => database.applications.find(a => a.id === id) || null,
+
+    getApplicationByChannelId: async (channelId) => database.applications.find(a => a.channel_id === channelId) || null,
 
     getPendingApplications: async () => database.applications.filter(a => a.status === 'pending').sort((a, b) => new Date(a.applied_at) - new Date(b.applied_at)),
 
@@ -453,6 +505,22 @@ const dbFunctions = {
             }
         });
         return accounts;
+    },
+
+    getAffiliationDashboardData: async () => {
+        return (database.users || []).map(u => ({
+            userId: u.user_id,
+            username: u.username,
+            referralCount: u.referral_count || 0,
+            referralPoints: u.referral_points || 0,
+            totalEarnings: u.total_earnings || 0,
+            accounts: (u.socialAccounts || []).map(a => ({
+                platform: a.platform,
+                handle: a.handle,
+                tapitLink: a.tapitLink,
+                status: a.status
+            }))
+        })).sort((a, b) => (b.totalEarnings || 0) - (a.totalEarnings || 0));
     },
 
     updateUserReferralLink: async (userId, inviteCode) => {

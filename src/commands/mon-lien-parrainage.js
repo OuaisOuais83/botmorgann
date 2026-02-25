@@ -44,7 +44,7 @@ module.exports = {
                         `**🎯 COMMENT ÇA MARCHE :**\n` +
                         `1️⃣ Partage ce lien à des monteurs talentueux\n` +
                         `2️⃣ Ils rejoignent via ton lien\n` +
-                        `3️⃣ Ils postulent avec \`/apply\`\n` +
+                        `3️⃣ Ils postulent via le bouton **Postuler** (#accueil)\n` +
                         `4️⃣ S'ils sont validés → **TU GAGNES DES POINTS !**\n\n` +
                         `📊 Tape \`/mes-parrainages\` pour voir tes stats 🚀`
                 });

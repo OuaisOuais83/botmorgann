@@ -133,6 +133,11 @@ module.exports = {
                 await getOrCreateChannel(channelData.name, ChannelType.GuildText, categories.management, adminOverwrites);
             }
 
+            // Catégorie TICKETS (candidatures - canaux créés dynamiquement)
+            if (config.channels.categories.tickets) {
+                categories.tickets = await getOrCreateCategory(config.channels.categories.tickets);
+            }
+
             console.log('✅ Toutes les catégories et canaux créés!');
 
             // ÉTAPE 3: Remplir les canaux principaux avec messages de bienvenue
@@ -196,7 +201,7 @@ module.exports = {
                             '• Partager tes analyses avec les autres.\n' +
                             '• Aider la communauté à grandir.\n\n' +
                             '**Commandes utiles:**\n' +
-                            '`/apply` - Postuler\n' +
+                            '**Postuler** (bouton dans #accueil)\n' +
                             '`/stats` - Voir ta progression\n' +
                             '`/pay view` - Voir tes gains d\'affiliation\n'
                         )

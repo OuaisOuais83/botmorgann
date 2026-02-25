@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, REST, Routes, ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const database = require('./database');
 const cron = require('node-cron');
 const config = require('./config');
@@ -100,10 +100,7 @@ client.on('guildMemberAdd', async (member) => {
 
 🌾 **Gagne de l'argent** avec tes montages vidéo
 
-**Pour commencer, tape dans le serveur :**
-\`\`\`
-/apply
-\`\`\`
+**Pour commencer :** va dans le canal #accueil et clique sur le bouton **Postuler** pour ouvrir ta candidature.
 
 C'est tout. Simple. On te répond sous 24h. 🚀`;
 
@@ -149,12 +146,37 @@ client.on('interactionCreate', async interaction => {
         }
     }
 
-    // Boutons et autres interactions
+    // Boutons
     if (interaction.isButton()) {
-        // Géré dans les commandes individuelles
+        try {
+            const ticketHandlers = require('./utils/ticketHandlers');
+            if (interaction.customId === 'open-application-ticket') {
+                await ticketHandlers.handleOpenApplicationTicket(interaction);
+            } else if (interaction.customId === 'applicationModalTicket') {
+                await ticketHandlers.showApplicationModal(interaction);
+            } else if (interaction.customId.startsWith('ticket-accept-')) {
+                await ticketHandlers.handleTicketAccept(interaction);
+            } else if (interaction.customId.startsWith('ticket-reject-')) {
+                await ticketHandlers.handleTicketReject(interaction);
+            }
+        } catch (err) {
+            console.error('❌ Erreur bouton:', err);
+            if (!interaction.replied && !interaction.deferred) {
+                interaction.reply({ content: '❌ Erreur.', ephemeral: true }).catch(() => {});
+            }
+        }
     }
 
     if (interaction.isModalSubmit()) {
+        if (interaction.customId === 'applicationModalTicket') {
+            await handleApplicationModalSubmit(interaction);
+            return;
+        }
+        if (interaction.customId.startsWith('ticketRejectModal-')) {
+            const { handleTicketRejectModalSubmit } = require('./utils/ticketHandlers');
+            await handleTicketRejectModalSubmit(interaction);
+            return;
+        }
         // Handler pour le modal de test (test-apply)
         if (interaction.customId === 'test-application-modal') {
             const instagram = interaction.fields.getTextInputValue('instagram');
@@ -214,13 +236,25 @@ function startAutomations() {
         updateDailyLeaderboard();
     });
 
+    // Leaderboard hebdomadaire chaque lundi à 9h
+    cron.schedule('0 9 * * 1', () => {
+        updateWeeklyLeaderboard();
+    });
+
     // Sauvegarde de sécurité quotidienne à 4h (no-op si Postgres, backup Discord si JSON)
     cron.schedule('0 4 * * *', () => {
         const db = require('./database');
         db.backupDatabase();
     });
 
-    console.log('⏰ Automatisations programmées:\n   - Motivation quotidienne: 8h00\n   - Leaderboard quotidien: 20h00\n   - Sauvegarde de sécurité: 4h00\n');
+    // Synchronisation des niveaux et badges chaque jour à 6h
+    cron.schedule('0 6 * * *', async () => {
+        const { syncLevelsForAllUsers, syncBadges } = require('./utils/levelSync');
+        await syncLevelsForAllUsers(client);
+        await syncBadges(client);
+    });
+
+    console.log('⏰ Automatisations programmées:\n   - Leaderboard quotidien: 20h00\n   - Leaderboard hebdomadaire: lundi 9h00\n   - Sync niveaux/badges: 6h00\n   - Sauvegarde de sécurité: 4h00\n');
 }
 
 // Envoyer un message de motivation
@@ -240,10 +274,72 @@ async function sendDailyMotivation() {
     });
 }
 
-// Mettre à jour le leaderboard quotidien
+// Mettre à jour le leaderboard quotidien (20h) - All-time
 async function updateDailyLeaderboard() {
-    // Implémentation dans une version future
+    try {
+        const { getTopUsers } = require('./database');
+        const topUsers = await getTopUsers(10);
+        if (topUsers.length === 0) return;
+
+        const embeds = require('./utils/embeds');
+        const embed = embeds.leaderboard(topUsers, 'all-time');
+
+        for (const guild of client.guilds.cache.values()) {
+            const ch = guild.channels.cache.find(c =>
+                (c.name.includes('défis-hebdomadaires') || c.name.includes('hall-of-fame') || c.name.includes('accueil')) && c.isTextBased()
+            );
+            if (ch) await ch.send({ embeds: [embed] }).catch(() => {});
+        }
+        console.log('📊 Leaderboard quotidien publié');
+    } catch (err) {
+        console.error('❌ updateDailyLeaderboard:', err);
+    }
 }
+
+// Leaderboard hebdomadaire (lundi 9h)
+async function updateWeeklyLeaderboard() {
+    try {
+        const { getTopUsersThisWeek } = require('./database');
+        const topUsers = await getTopUsersThisWeek(10);
+        if (topUsers.length === 0) return;
+
+        const embeds = require('./utils/embeds');
+        const embed = embeds.leaderboard(topUsers, 'cette semaine');
+
+        for (const guild of client.guilds.cache.values()) {
+            const ch = guild.channels.cache.find(c =>
+                (c.name.includes('défis-hebdomadaires') || c.name.includes('hall-of-fame')) && c.isTextBased()
+            );
+            if (ch) {
+                await ch.send({
+                    content: '🏆 **TOP 10 DE LA SEMAINE** — Bravo aux farmers les plus actifs !',
+                    embeds: [embed]
+                }).catch(() => {});
+            }
+        }
+        console.log('📊 Leaderboard hebdomadaire publié');
+    } catch (err) {
+        console.error('❌ updateWeeklyLeaderboard:', err);
+    }
+}
+
+// Serveur HTTP pour healthcheck (Railway, Render, etc.)
+const http = require('http');
+const HEALTH_PORT = process.env.PORT || 3000;
+const server = http.createServer((req, res) => {
+    if (req.url === '/health' || req.url === '/') {
+        const monitor = require('./utils/health');
+        const status = monitor.getSystemStatus();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, uptime: status.uptime, ...status }));
+    } else {
+        res.writeHead(404);
+        res.end();
+    }
+});
+server.listen(HEALTH_PORT, () => {
+    console.log(`🩺 Healthcheck HTTP: http://localhost:${HEALTH_PORT}/health`);
+});
 
 // Gestion des erreurs
 // --- GESTION DES ERREURS GLOBALE (AUTONOMIE) ---

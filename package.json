@@ -3,10 +3,11 @@
     "version": "1.0.0",
     "description": "Bot Discord Farmer League - Gestion d'équipes de monteurs vidéo professionnels multi-niches",
     "main": "src/index.js",
-    "scripts": {
-        "start": "node src/index.js",
-        "dev": "node src/index.js"
-    },
+"scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "test": "node --test tests/"
+  },
     "keywords": [
         "discord",
         "bot",

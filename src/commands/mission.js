@@ -105,7 +105,7 @@ module.exports = {
                 if (hasRole) {
                     userData = await createUser(interaction.user.id, interaction.user.username);
                 } else {
-                    return interaction.reply({ embeds: [embeds.error('Accès refusé', 'Tu dois être membre (Rookie+) pour prendre des missions. Utilise `/apply`.')], ephemeral: true });
+                    return interaction.reply({ embeds: [embeds.error('Accès refusé', 'Tu dois être membre (Rookie+) pour prendre des missions. Postule via le bouton Postuler dans #accueil.')], ephemeral: true });
                 }
             }
 

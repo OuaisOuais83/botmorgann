@@ -49,7 +49,7 @@ const embeds = {
                 '💎 **Comment ça marche ?**\n' +
                 '1. Lis notre vision dans <#VISION_CHANNEL>\n' +
                 '2. Participe aux défis dans <#CHALLENGES_CHANNEL>\n' +
-                '3. Utilise `/apply` pour rejoindre officiellement\n\n' +
+                '3. Clique sur **Postuler** (#accueil) pour rejoindre officiellement\n\n' +
                 '🚀 **Ce qui t\'attend:**\n' +
                 '✅ Système de progression clair (Rookie → Elite)\n' +
                 '✅ Défis hebdomadaires pour développer tes skills\n' +
@@ -109,6 +109,39 @@ const embeds = {
             .setDescription(description || 'Aucun farmer pour le moment')
             .setFooter({ text: 'Continue à progresser pour grimper le classement!' })
             .setTimestamp();
+    },
+
+    // Audit logs embed
+    auditLogs: (logs, title = '📋 Logs d\'audit admin') => {
+        const desc = logs.slice(0, 15).map(log => {
+            const date = new Date(log.timestamp).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+            const action = log.action_type || '?';
+            const admin = log.admin_name || log.admin_id || '?';
+            const target = log.target_name ? `<@${log.target_id}>` : (log.target_id || '-');
+            const details = (log.details || '').substring(0, 80);
+            return `\`${date}\` **${action}** par ${admin}\n  → ${target} ${details ? `: ${details}` : ''}`;
+        }).join('\n\n') || 'Aucun log récent.';
+        return new EmbedBuilder()
+            .setColor(config.colors.primary)
+            .setTitle(title)
+            .setDescription(desc.length > 4000 ? desc.substring(0, 3997) + '...' : desc)
+            .setFooter({ text: `Derniers ${logs.length} événements` })
+            .setTimestamp();
+    },
+
+    // Application/Candidature embed
+    application: (app) => {
+        return new EmbedBuilder()
+            .setColor(config.colors.primary)
+            .setTitle(`📋 Candidature #${app.id} - ${app.username}`)
+            .addFields(
+                { name: 'Expérience', value: (app.experience || 'Non fourni').substring(0, 1024), inline: false },
+                { name: 'Portfolio', value: (app.portfolio || 'Non fourni').substring(0, 1024), inline: false },
+                { name: 'Motivation', value: (app.motivation || 'Non fourni').substring(0, 1024), inline: false },
+                { name: 'Statut', value: app.status || 'pending', inline: true }
+            )
+            .setFooter({ text: `Candidat: ${app.user_id}` })
+            .setTimestamp(app.applied_at ? new Date(app.applied_at) : undefined);
     },
 
     // Mission embed

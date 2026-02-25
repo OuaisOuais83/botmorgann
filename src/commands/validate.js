@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { getSubmission, validateSubmission, updateUserPoints, updateUserEarnings, incrementClipsCompleted, completeMission, getUser, updateUserLevel, getUserSubmissions } = require('../database');
+const { getSubmission, validateSubmission, updateUserPoints, incrementClipsCompleted, completeMission, getUser, updateUserLevel, getUserSubmissions, createAuditLog } = require('../database');
 const config = require('../config');
 const embeds = require('../utils/embeds');
 const { onFirstMissionCompleted } = require('../utils/referralTracking');
@@ -73,6 +73,16 @@ module.exports = {
             }
         }
 
+        // Log d'audit
+        await createAuditLog(
+            'CLIP_VALIDATED',
+            interaction.user.id,
+            interaction.user.username,
+            submission.user_id,
+            submission.username,
+            `Clip #${id} validé: note ${grade}, +${pointsEarned} pts pour <@${submission.user_id}>`
+        );
+
         // Vérifier si l'utilisateur doit passer au niveau suivant
         const user = await getUser(submission.user_id);
         const newLevel = calculateLevel(user.points);
@@ -84,8 +94,17 @@ module.exports = {
             const member = await interaction.guild.members.fetch(submission.user_id);
             const newRole = interaction.guild.roles.cache.find(r => r.name === config.roles[newLevel].name);
 
-            if (newRole) {
+                if (newRole) {
                 await member.roles.add(newRole);
+
+                await createAuditLog(
+                    'LEVEL_UP',
+                    interaction.user.id,
+                    interaction.user.username,
+                    submission.user_id,
+                    member.user.username,
+                    `Promotion: ${user.level} → ${newLevel} (${user.points} pts)`
+                );
 
                 // Retirer l'ancien rôle
                 const oldRole = interaction.guild.roles.cache.find(r => r.name === config.roles[user.level].name);

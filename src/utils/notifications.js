@@ -58,7 +58,7 @@ const notifications = {
             .addFields(
                 { name: 'Expérience', value: (application.experience || 'Non fourni').substring(0, 1024) },
                 { name: 'Portfolio', value: (application.portfolio || 'Non fourni').substring(0, 1024) },
-                { name: 'Action Requise', value: 'Utilisez `/review list` ou `/review approve ' + application.id + '`' }
+                { name: 'Action Requise', value: application.channel_id ? `Traiter dans le canal ticket ou \`/review accepter id:${application.id}\`` : `\`/review accepter id:${application.id}\`` }
             )
             .setTimestamp();
 
@@ -121,9 +121,15 @@ const notifications = {
     },
 
     async notifyReferral(guild, referrer, newMember) {
-        // ... (existing code)
-        // ...
-        await this.sendDual(guild, embed, '', backupData);
+        const embed = new EmbedBuilder()
+            .setColor('#9b59b6')
+            .setTitle('👥 Nouveau parrainage')
+            .setDescription(`**Parrain:** ${referrer.username} (\`${referrer.user_id}\`)\n**Filleul:** ${newMember.username} (\`${newMember.id}\`)`)
+            .setTimestamp();
+
+        const backupData = { type: 'REFERRAL', referrer_id: referrer.user_id, referred_id: newMember.id };
+
+        await this.sendDual(guild, embed, '🆕 **Nouveau filleul arrivé !**', backupData);
     },
 
     async notifyAccountEdit(guild, user, oldAccount, newAccount) {

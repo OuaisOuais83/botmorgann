@@ -88,6 +88,16 @@ module.exports = {
             // 1. Mettre à jour le statut
             await db.updateApplicationStatus(appId, 'approved', interaction.user.id);
 
+            // Log d'audit
+            await db.createAuditLog(
+                'APPLICATION_APPROVED',
+                interaction.user.id,
+                interaction.user.username,
+                application.user_id,
+                application.username,
+                `Candidature #${appId} approuvée`
+            );
+
             // 2. Créer l'utilisateur dans la DB
             let user = await db.getUser(application.user_id);
             if (!user) {
@@ -97,7 +107,7 @@ module.exports = {
             // 3. Attribuer les rôles
             try {
                 const member = await interaction.guild.members.fetch(application.user_id);
-                const roleRookie = interaction.guild.roles.cache.find(r => r.name === 'Rookie');
+                const roleRookie = interaction.guild.roles.cache.find(r => r.name === config.roles.rookie?.name || r.name?.includes('Rookie'));
                 const roleCandidat = interaction.guild.roles.cache.find(r => r.name.includes('Candidat'));
 
                 if (roleRookie) await member.roles.add(roleRookie);
@@ -151,6 +161,16 @@ module.exports = {
 
             // Update statut
             await db.updateApplicationStatus(appId, 'rejected', interaction.user.id);
+
+            // Log d'audit
+            await db.createAuditLog(
+                'APPLICATION_REJECTED',
+                interaction.user.id,
+                interaction.user.username,
+                application.user_id,
+                application.username,
+                `Candidature #${appId} refusée. Raison: ${reason}`
+            );
 
             // DM Refus
             try {

@@ -4,7 +4,7 @@ const db = require('../database');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('mes-parrainages')
-        .setDescription('Affiche tes statistiques de parrainage'),
+        .setDescription('👥 Voir qui tu as parrainé et combien d\'affiliés tu as'),
 
     async execute(interaction) {
         try {
@@ -19,7 +19,7 @@ module.exports = {
                 await interaction.editReply({
                     content:
                         `❌ Tu n'as pas encore de profil.\n\n` +
-                        `Utilise d'abord \`/apply\` pour postuler !`
+                        `Va dans #accueil et clique sur **Postuler** pour ouvrir une candidature !`
                 });
                 return;
             }
@@ -38,10 +38,11 @@ module.exports = {
             // Créer l'embed
             const embed = new EmbedBuilder()
                 .setColor('#FFD700')
-                .setTitle(`👥 PARRAINAGES DE ${username.toUpperCase()}`)
+                .setTitle(`👥 Tes affiliés - ${username}`)
                 .setDescription(
-                    `**Points de parrainage : ${user.referral_points || 0} pts** 💰\n` +
-                    `**Filleuls actifs : ${activeReferrals.length}** 🚀\n\n` +
+                    `**Total : ${referrals.length} affilié${referrals.length > 1 ? 's' : ''}**\n` +
+                    `**Points gagnés : ${user.referral_points || 0} pts** 💰\n` +
+                    `**Actifs (1ère mission faite) : ${activeReferrals.length}** 🚀\n\n` +
                     `────────────────────────`
                 )
                 .setTimestamp();

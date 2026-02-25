@@ -49,7 +49,7 @@ module.exports = {
                 } else {
                     if (targetUser.id === interaction.user.id) {
                         return interaction.reply({
-                            embeds: [embeds.error('Pas encore membre', 'Tu ne fais pas encore partie de l\'équipe. Utilise `/apply` pour postuler!')],
+                            embeds: [embeds.error('Pas encore membre', 'Tu ne fais pas encore partie de l\'équipe. Va dans #accueil et clique sur Postuler !')],
                             ephemeral: true
                         });
                     } else {

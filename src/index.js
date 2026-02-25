@@ -133,15 +133,22 @@ client.on('interactionCreate', async interaction => {
         } catch (error) {
             console.error(`❌ Erreur lors de l'exécution de ${interaction.commandName}:`, error);
 
+            const code = error.code ?? error.rawError?.code;
+            if (code === 10062 || code === 40060) return;
+
             const errorMessage = {
-                content: '❌ Une erreur s\'est produite! (CRASH_TRACE_999)',
+                content: '❌ Une erreur s\'est produite! Réessaie dans quelques secondes.',
                 ephemeral: true
             };
 
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp(errorMessage);
-            } else {
-                await interaction.reply(errorMessage);
+            try {
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.followUp(errorMessage);
+                } else {
+                    await interaction.reply(errorMessage);
+                }
+            } catch (e) {
+                if (e.code !== 10062 && e.code !== 40060) console.error('Erreur réponse:', e);
             }
         }
     }

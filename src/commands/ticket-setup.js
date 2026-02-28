@@ -41,6 +41,7 @@ module.exports = {
         );
 
         await channel.send({ embeds: [embed], components: [row] });
+        console.log(`[TICKET] Message Postuler envoyé dans #${channel.name} (${channel.id}), customId: open-application-ticket`);
 
         await interaction.editReply({
             content: `✅ Message "Postuler" envoyé dans <#${channel.id}>`

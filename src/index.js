@@ -156,6 +156,10 @@ client.on('interactionCreate', async interaction => {
     // Boutons
     if (interaction.isButton()) {
         try {
+            if (['open-application-ticket', 'applicationModalTicket'].includes(interaction.customId) ||
+                interaction.customId.startsWith('ticket-accept-') || interaction.customId.startsWith('ticket-reject-')) {
+                console.log(`[TICKET] Bouton reçu: ${interaction.customId} par ${interaction.user.tag}`);
+            }
             const ticketHandlers = require('./utils/ticketHandlers');
             if (interaction.customId === 'open-application-ticket') {
                 await ticketHandlers.handleOpenApplicationTicket(interaction);
@@ -167,16 +171,25 @@ client.on('interactionCreate', async interaction => {
                 await ticketHandlers.handleTicketReject(interaction);
             }
         } catch (err) {
-            console.error('❌ Erreur bouton:', err);
+            console.error('[TICKET] Erreur bouton', interaction.customId, err);
             if (!interaction.replied && !interaction.deferred) {
-                interaction.reply({ content: '❌ Erreur.', ephemeral: true }).catch(() => {});
+                interaction.reply({ content: '❌ Erreur. Réessaie ou contacte un admin.', ephemeral: true }).catch(() => {});
+            } else if (interaction.deferred) {
+                interaction.editReply({ content: '❌ Erreur. Réessaie ou contacte un admin.' }).catch(() => {});
             }
         }
     }
 
     if (interaction.isModalSubmit()) {
         if (interaction.customId === 'applicationModalTicket') {
-            await handleApplicationModalSubmit(interaction);
+            console.log(`[TICKET] Modal submit: applicationModalTicket par ${interaction.user.tag}`);
+            try {
+                const ticketHandlers = require('./utils/ticketHandlers');
+                await ticketHandlers.handleApplicationModalSubmit(interaction);
+            } catch (err) {
+                console.error('[TICKET] Erreur handleApplicationModalSubmit:', err);
+                interaction.reply({ content: '❌ Erreur lors de l\'envoi du formulaire.', ephemeral: true }).catch(() => {});
+            }
             return;
         }
         if (interaction.customId.startsWith('ticketRejectModal-')) {

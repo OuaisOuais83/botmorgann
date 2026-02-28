@@ -11,18 +11,45 @@ function slugChannelName(username) {
     return (username || 'user').replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase().substring(0, 20) || 'candidature';
 }
 
+const LOG = (label, ...args) => {
+    const ts = new Date().toISOString();
+    console.log(`[TICKET ${ts}] ${label}`, ...args);
+};
+
 async function handleOpenApplicationTicket(interaction) {
+    LOG('open-application-ticket', 'clic par', interaction.user.tag, interaction.user.id);
+
+    try {
+        await interaction.deferReply({ ephemeral: true });
+        LOG('open-application-ticket', 'defer OK');
+    } catch (e) {
+        console.error('[TICKET] defer échoué:', e);
+        return;
+    }
+
     const db = database;
     const rateLimit = security.checkCommandCooldown(interaction.user.id, 'apply');
     if (!rateLimit.allowed) {
-        return interaction.reply({
+        LOG('open-application-ticket', 'rate limit', interaction.user.id);
+        return interaction.editReply({
             content: `⏳ Attends ${rateLimit.timeLeft}s avant de réessayer.`,
             ephemeral: true
         });
     }
 
-    const existingUser = await db.getUser(interaction.user.id);
-    const applications = await db.getAllApplications();
+    let existingUser, applications;
+    try {
+        existingUser = await db.getUser(interaction.user.id);
+        applications = await db.getAllApplications();
+        LOG('open-application-ticket', 'DB OK', 'applications:', applications?.length ?? 0);
+    } catch (dbErr) {
+        console.error('[TICKET] Erreur DB getAllApplications:', dbErr);
+        return interaction.editReply({
+            content: '❌ Erreur temporaire. Réessaie dans quelques secondes.',
+            ephemeral: true
+        }).catch(() => {});
+    }
+
     const userApp = applications.find(a => a.user_id === interaction.user.id);
 
     const isApproved = interaction.member.roles.cache.some(r =>
@@ -30,50 +57,73 @@ async function handleOpenApplicationTicket(interaction) {
     );
 
     if (isApproved) {
-        return interaction.reply({
-            content: '✅ Tu es déjà membre de la Farmer League !',
-            ephemeral: true
+        LOG('open-application-ticket', 'déjà membre', interaction.user.id);
+        return interaction.editReply({
+            content: '✅ Tu es déjà membre de la Farmer League !'
         });
     }
 
     if (userApp && (userApp.status === 'pending' || userApp.status === 'ticket_open')) {
-        return interaction.reply({
-            content: '⚠️ Tu as déjà une candidature en cours. Vérifie tes canaux ou contacte un admin.',
-            ephemeral: true
+        LOG('open-application-ticket', 'candidature déjà en cours', interaction.user.id);
+        return interaction.editReply({
+            content: '⚠️ Tu as déjà une candidature en cours. Vérifie tes canaux ou contacte un admin.'
         });
     }
 
     const guild = interaction.guild;
+    LOG('open-application-ticket', 'création catégorie/canal', 'guild:', guild?.name);
+
     let category = guild.channels.cache.find(c => c.name === config.channels.categories.tickets && c.type === ChannelType.GuildCategory);
     if (!category) {
-        category = await guild.channels.create({
-            name: config.channels.categories.tickets,
-            type: ChannelType.GuildCategory,
-            permissionOverwrites: [
-                { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] }
-            ]
-        });
+        try {
+            category = await guild.channels.create({
+                name: config.channels.categories.tickets,
+                type: ChannelType.GuildCategory,
+                permissionOverwrites: [
+                    { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] }
+                ]
+            });
+            LOG('open-application-ticket', 'catégorie créée', category.id);
+        } catch (e) {
+            console.error('[TICKET] Erreur création catégorie:', e);
+            return interaction.editReply({ content: '❌ Impossible de créer la catégorie. Contacte un admin.' }).catch(() => {});
+        }
     }
 
     const slug = slugChannelName(interaction.user.username) + '-' + interaction.user.id.slice(-4);
     const channelName = `candidature-${slug}`.substring(0, 100);
 
-    const channel = await guild.channels.create({
-        name: channelName,
-        type: ChannelType.GuildText,
-        parent: category.id,
-        permissionOverwrites: [
-            { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-            { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] }
-        ]
-    });
+    let channel;
+    try {
+        channel = await guild.channels.create({
+            name: channelName,
+            type: ChannelType.GuildText,
+            parent: category.id,
+            permissionOverwrites: [
+                { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+                { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] }
+            ]
+        });
+        LOG('open-application-ticket', 'canal créé', channel.id, channel.name);
+    } catch (e) {
+        console.error('[TICKET] Erreur création canal:', e);
+        return interaction.editReply({ content: '❌ Impossible de créer le canal. Vérifie les permissions du bot.' }).catch(() => {});
+    }
 
     const adminRole = guild.roles.cache.find(r => r.name === configRoles.admin?.name);
     const modRole = guild.roles.cache.find(r => r.name === configRoles.moderator?.name);
     if (adminRole) await channel.permissionOverwrites.add(adminRole, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true });
     if (modRole) await channel.permissionOverwrites.add(modRole, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true });
 
-    const app = await db.createApplication(interaction.user.id, interaction.user.username, null, null, null, channel.id);
+    let app;
+    try {
+        app = await db.createApplication(interaction.user.id, interaction.user.username, null, null, null, channel.id);
+        LOG('open-application-ticket', 'application créée BDD', app?.id);
+    } catch (e) {
+        console.error('[TICKET] Erreur createApplication:', e);
+        await channel.delete().catch(() => {});
+        return interaction.editReply({ content: '❌ Erreur base de données. Réessaie.' }).catch(() => {});
+    }
 
     const welcomeEmbed = new EmbedBuilder()
         .setColor(config.colors.primary)
@@ -105,13 +155,14 @@ async function handleOpenApplicationTicket(interaction) {
         await interaction.member.roles.add(candidatRole).catch(() => {});
     }
 
-    await interaction.reply({
-        content: `✅ Ton canal de candidature a été créé : <#${channel.id}>`,
-        ephemeral: true
+    await interaction.editReply({
+        content: `✅ Ton canal de candidature a été créé : <#${channel.id}>`
     });
+    LOG('open-application-ticket', 'SUCCÈS', interaction.user.tag, 'channel:', channel.id);
 }
 
 function showApplicationModal(interaction) {
+    LOG('applicationModalTicket', 'affichage modal', interaction.user.tag);
     const modal = new ModalBuilder()
         .setCustomId('applicationModalTicket')
         .setTitle('Candidature Farmer League');
@@ -150,16 +201,32 @@ function showApplicationModal(interaction) {
 }
 
 async function handleApplicationModalSubmit(interaction) {
+    LOG('applicationModalSubmit', 'soumission', interaction.user.tag, 'channel:', interaction.channelId);
+
     const experience = interaction.fields.getTextInputValue('experience');
     const portfolio = interaction.fields.getTextInputValue('portfolio');
     const motivation = interaction.fields.getTextInputValue('motivation');
 
-    const app = await database.getApplicationByChannelId(interaction.channelId);
+    let app;
+    try {
+        app = await database.getApplicationByChannelId(interaction.channelId);
+        LOG('applicationModalSubmit', 'app trouvée:', app?.id ?? 'null');
+    } catch (e) {
+        console.error('[TICKET] Erreur getApplicationByChannelId:', e);
+        return interaction.reply({ content: '❌ Erreur base de données.', ephemeral: true }).catch(() => {});
+    }
     if (!app || app.status !== 'ticket_open') {
+        LOG('applicationModalSubmit', 'app invalide ou déjà soumise', app?.status);
         return interaction.reply({ content: '❌ Candidature introuvable ou déjà soumise.', ephemeral: true });
     }
 
-    await database.updateApplication(app.id, { experience, portfolio, motivation, status: 'pending' });
+    try {
+        await database.updateApplication(app.id, { experience, portfolio, motivation, status: 'pending' });
+        LOG('applicationModalSubmit', 'application mise à jour', app.id);
+    } catch (e) {
+        console.error('[TICKET] Erreur updateApplication:', e);
+        return interaction.reply({ content: '❌ Erreur lors de l\'envoi. Réessaie.', ephemeral: true }).catch(() => {});
+    }
 
     const embed = new EmbedBuilder()
         .setColor(config.colors.primary)

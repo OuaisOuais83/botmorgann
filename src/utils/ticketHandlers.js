@@ -16,6 +16,95 @@ const LOG = (label, ...args) => {
     console.log(`[TICKET ${ts}] ${label}`, ...args);
 };
 
+/** Crée un canal ticket pour un membre (style Notify Clipping). Utilisé par guildMemberAdd et fallback bouton. */
+async function createTicketForMember(member) {
+    const db = database;
+    const guild = member.guild;
+
+    let app;
+    try {
+        app = await db.createApplicationForOnboarding(member.user.id, member.user.username);
+        LOG('createTicketForMember', 'application créée', app?.id, member.user.tag);
+    } catch (e) {
+        console.error('[TICKET] Erreur createApplicationForOnboarding:', e);
+        throw e;
+    }
+
+    let category = guild.channels.cache.find(c => c.name === config.channels.categories.tickets && c.type === ChannelType.GuildCategory);
+    if (!category) {
+        category = await guild.channels.create({
+            name: config.channels.categories.tickets,
+            type: ChannelType.GuildCategory,
+            permissionOverwrites: [{ id: guild.id, deny: [PermissionFlagsBits.ViewChannel] }]
+        });
+        LOG('createTicketForMember', 'catégorie créée', category.id);
+    }
+
+    const channelName = `ticket-${app.id}`.substring(0, 100);
+    let channel;
+    try {
+        channel = await guild.channels.create({
+            name: channelName,
+            type: ChannelType.GuildText,
+            parent: category.id,
+            permissionOverwrites: [
+                { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+                { id: member.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] }
+            ]
+        });
+        LOG('createTicketForMember', 'canal créé', channel.id, channelName);
+    } catch (e) {
+        console.error('[TICKET] Erreur création canal:', e);
+        await db.updateApplication(app.id, { status: 'cancelled' }).catch(() => {});
+        throw e;
+    }
+
+    try {
+        await db.updateApplication(app.id, { channel_id: channel.id });
+    } catch (e) {
+        console.error('[TICKET] Erreur update channel_id:', e);
+        await channel.delete().catch(() => {});
+        throw e;
+    }
+
+    const adminRole = guild.roles.cache.find(r => r.name === configRoles.admin?.name);
+    const modRole = guild.roles.cache.find(r => r.name === configRoles.moderator?.name);
+    if (adminRole) await channel.permissionOverwrites.add(adminRole, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true });
+    if (modRole) await channel.permissionOverwrites.add(modRole, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true });
+
+    const welcomeEmbed = new EmbedBuilder()
+        .setColor(config.colors.primary)
+        .setTitle('Tu viens d\'arriver sur Farmer League')
+        .setDescription(
+            `Tu viens d'arriver sur le serveur **Farmer League**. Notre équipe va bientôt analyser ton profil et, si tout est OK, tu recevras le rôle **Rookie**.\n\n` +
+            `**Avant ça**, clique sur le bouton ci-dessous pour remplir ta candidature (expérience, portfolio, motivation).\n\n` +
+            `**Ne ferme pas ce ticket.**`
+        )
+        .setFooter({ text: 'Farmer League - Onboarding' })
+        .setTimestamp();
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('applicationModalTicket')
+            .setLabel('Remplir ma candidature')
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji('📝')
+    );
+
+    await channel.send({
+        content: `${member.user}`,
+        embeds: [welcomeEmbed],
+        components: [row]
+    });
+
+    const candidatRole = guild.roles.cache.find(r => r.name?.includes('Candidat'));
+    if (candidatRole) {
+        await member.roles.add(candidatRole).catch(() => {});
+    }
+
+    return { channel, app };
+}
+
 async function handleOpenApplicationTicket(interaction) {
     LOG('open-application-ticket', 'clic par', interaction.user.tag, interaction.user.id);
 
@@ -70,89 +159,15 @@ async function handleOpenApplicationTicket(interaction) {
         });
     }
 
-    const guild = interaction.guild;
-    LOG('open-application-ticket', 'création catégorie/canal', 'guild:', guild?.name);
-
-    let category = guild.channels.cache.find(c => c.name === config.channels.categories.tickets && c.type === ChannelType.GuildCategory);
-    if (!category) {
-        try {
-            category = await guild.channels.create({
-                name: config.channels.categories.tickets,
-                type: ChannelType.GuildCategory,
-                permissionOverwrites: [
-                    { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] }
-                ]
-            });
-            LOG('open-application-ticket', 'catégorie créée', category.id);
-        } catch (e) {
-            console.error('[TICKET] Erreur création catégorie:', e);
-            return interaction.editReply({ content: '❌ Impossible de créer la catégorie. Contacte un admin.' }).catch(() => {});
-        }
-    }
-
-    const slug = slugChannelName(interaction.user.username) + '-' + interaction.user.id.slice(-4);
-    const channelName = `candidature-${slug}`.substring(0, 100);
-
-    let channel;
+    let channel, app;
     try {
-        channel = await guild.channels.create({
-            name: channelName,
-            type: ChannelType.GuildText,
-            parent: category.id,
-            permissionOverwrites: [
-                { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-                { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] }
-            ]
-        });
-        LOG('open-application-ticket', 'canal créé', channel.id, channel.name);
+        const result = await createTicketForMember(interaction.member);
+        channel = result.channel;
+        app = result.app;
     } catch (e) {
-        console.error('[TICKET] Erreur création canal:', e);
-        return interaction.editReply({ content: '❌ Impossible de créer le canal. Vérifie les permissions du bot.' }).catch(() => {});
-    }
-
-    const adminRole = guild.roles.cache.find(r => r.name === configRoles.admin?.name);
-    const modRole = guild.roles.cache.find(r => r.name === configRoles.moderator?.name);
-    if (adminRole) await channel.permissionOverwrites.add(adminRole, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true });
-    if (modRole) await channel.permissionOverwrites.add(modRole, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true });
-
-    let app;
-    try {
-        app = await db.createApplication(interaction.user.id, interaction.user.username, null, null, null, channel.id);
-        LOG('open-application-ticket', 'application créée BDD', app?.id);
-    } catch (e) {
-        console.error('[TICKET] Erreur createApplication:', e);
-        await channel.delete().catch(() => {});
-        return interaction.editReply({ content: '❌ Erreur base de données. Réessaie.' }).catch(() => {});
-    }
-
-    const welcomeEmbed = new EmbedBuilder()
-        .setColor(config.colors.primary)
-        .setTitle('🌾 Candidature Farmer League')
-        .setDescription(
-            `Bonjour ${interaction.user},\n\n` +
-            `Tu as ouvert une candidature pour rejoindre la **Farmer League**.\n\n` +
-            `Clique sur le bouton ci-dessous pour remplir ton dossier (expérience, portfolio, motivation).\n\n` +
-            `*Tu recevras une réponse sous 24-48h.*`
-        )
-        .setTimestamp();
-
-    const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-            .setCustomId('applicationModalTicket')
-            .setLabel('Remplir ma candidature')
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji('📝')
-    );
-
-    await channel.send({
-        content: `${interaction.user}`,
-        embeds: [welcomeEmbed],
-        components: [row]
-    });
-
-    const candidatRole = guild.roles.cache.find(r => r.name?.includes('Candidat'));
-    if (candidatRole) {
-        await interaction.member.roles.add(candidatRole).catch(() => {});
+        return interaction.editReply({
+            content: '❌ Erreur lors de la création du ticket. Réessaie ou contacte un admin.'
+        }).catch(() => {});
     }
 
     await interaction.editReply({
@@ -382,6 +397,7 @@ async function handleTicketRejectModalSubmit(interaction) {
 }
 
 module.exports = {
+    createTicketForMember,
     handleOpenApplicationTicket,
     showApplicationModal,
     handleApplicationModalSubmit,

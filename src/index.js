@@ -92,25 +92,41 @@ client.once('ready', async () => {
     console.log('🚀 Bot totalement opérationnel!\n');
 });
 
-// Event: Nouveau membre rejoint le serveur
+// Event: Nouveau membre rejoint le serveur (flow Notify Clipping - ticket auto)
 client.on('guildMemberAdd', async (member) => {
+    if (member.user.bot) return;
+
+    const isApproved = member.roles.cache.some(r =>
+        ['Rookie', 'Hustler', 'Grinder', 'Elite'].some(rank => r.name?.includes(rank))
+    );
+    if (isApproved) return;
+
+    let applications;
     try {
-        // Message ultra simple et direct EN PRIVÉ (DM)
-        const welcomeMessage = `👋 **Bienvenue sur Farmer League !**
+        applications = await database.getAllApplications();
+    } catch (e) {
+        console.error('[TICKET] guildMemberAdd DB error:', e);
+        return;
+    }
 
-🌾 **Gagne de l'argent** avec tes montages vidéo
+    const userApp = applications.find(a => a.user_id === member.user.id);
+    if (userApp && (userApp.status === 'pending' || userApp.status === 'ticket_open')) {
+        return;
+    }
 
-**Pour commencer :** va dans le canal #accueil et clique sur le bouton **Postuler** pour ouvrir ta candidature.
-
-C'est tout. Simple. On te répond sous 24h. 🚀`;
-
-        // Envoyer en DM (message privé, PAS de pollution du canal)
-        await member.send(welcomeMessage);
-
-        console.log(`✅ Message de bienvenue envoyé à ${member.user.tag}`);
+    try {
+        const { createTicketForMember } = require('./utils/ticketHandlers');
+        const { channel } = await createTicketForMember(member);
+        console.log(`[TICKET] Ticket auto créé pour ${member.user.tag} → #${channel.name}`);
     } catch (error) {
-        // Si le DM échoue (DMs fermés), on ne fait rien pour ne pas polluer le canal
-        console.log(`⚠️  Impossible d'envoyer DM à ${member.user.tag} (DMs fermés)`);
+        console.error('[TICKET] Erreur création ticket auto:', error);
+        try {
+            await member.send(
+                '❌ Impossible de créer ton ticket automatiquement. Va dans #accueil et clique sur **Postuler** pour réessayer, ou contacte un admin.'
+            ).catch(() => {});
+        } catch (dmErr) {
+            console.log(`⚠️ Impossible d'envoyer DM à ${member.user.tag} (fallback)`);
+        }
     }
 });
 

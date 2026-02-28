@@ -49,7 +49,7 @@ module.exports = {
                 } else {
                     if (targetUser.id === interaction.user.id) {
                         return interaction.reply({
-                            embeds: [embeds.error('Pas encore membre', 'Tu ne fais pas encore partie de l\'équipe. Va dans #accueil et clique sur Postuler !')],
+                            embeds: [embeds.error('Pas encore membre', 'Tu ne fais pas encore partie de l\'équipe. Ton ticket a été créé à ton arrivée — regarde tes canaux. Sinon #accueil → Postuler.')],
                             ephemeral: true
                         });
                     } else {

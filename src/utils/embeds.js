@@ -49,7 +49,7 @@ const embeds = {
                 '💎 **Comment ça marche ?**\n' +
                 '1. Lis notre vision dans <#VISION_CHANNEL>\n' +
                 '2. Participe aux défis dans <#CHALLENGES_CHANNEL>\n' +
-                '3. Clique sur **Postuler** (#accueil) pour rejoindre officiellement\n\n' +
+                '3. Ton **ticket** est créé à ton arrivée — remplis ta candidature\n\n' +
                 '🚀 **Ce qui t\'attend:**\n' +
                 '✅ Système de progression clair (Rookie → Elite)\n' +
                 '✅ Défis hebdomadaires pour développer tes skills\n' +

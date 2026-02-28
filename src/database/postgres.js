@@ -488,13 +488,30 @@ async function createApplication(userId, username, experience, portfolio, motiva
     return res.rows[0];
 }
 
-async function updateApplication(id, data) {
-    const { experience, portfolio, motivation, status } = data;
+async function createApplicationForOnboarding(userId, username) {
     const query = `
-        UPDATE applications SET experience = COALESCE($1, experience), portfolio = COALESCE($2, portfolio),
-        motivation = COALESCE($3, motivation), status = COALESCE($4, status) WHERE id = $5 RETURNING *;
+        INSERT INTO applications (user_id, username, experience, portfolio, motivation, status, applied_at, channel_id)
+        VALUES ($1, $2, NULL, NULL, NULL, 'ticket_open', NOW(), NULL)
+        RETURNING *;
     `;
-    const res = await pool.query(query, [experience, portfolio, motivation, status, id]);
+    const res = await pool.query(query, [userId, username]);
+    return res.rows[0];
+}
+
+async function updateApplication(id, data) {
+    const { experience, portfolio, motivation, status, channel_id } = data;
+    const updates = [];
+    const values = [];
+    let idx = 1;
+    if (experience !== undefined) { updates.push(`experience = COALESCE($${idx}, experience)`); values.push(experience); idx++; }
+    if (portfolio !== undefined) { updates.push(`portfolio = COALESCE($${idx}, portfolio)`); values.push(portfolio); idx++; }
+    if (motivation !== undefined) { updates.push(`motivation = COALESCE($${idx}, motivation)`); values.push(motivation); idx++; }
+    if (status !== undefined) { updates.push(`status = COALESCE($${idx}, status)`); values.push(status); idx++; }
+    if (channel_id !== undefined) { updates.push(`channel_id = $${idx}`); values.push(channel_id); idx++; }
+    if (updates.length === 0) return pool.query('SELECT * FROM applications WHERE id = $1', [id]).then(r => r.rows[0]);
+    values.push(id);
+    const query = `UPDATE applications SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`;
+    const res = await pool.query(query, values);
     return res.rows[0];
 }
 
@@ -764,6 +781,7 @@ module.exports = {
     getAllSocialAccounts,
     getAffiliationDashboardData,
     createApplication,
+    createApplicationForOnboarding,
     updateApplication,
     getApplication,
     getApplicationByChannelId,

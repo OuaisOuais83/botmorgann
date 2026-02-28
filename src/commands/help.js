@@ -75,7 +75,7 @@ module.exports = {
                 .addFields(
                     {
                         name: '📝 Recrutement & Profil',
-                        value: '**Postuler** - Bouton dans #accueil pour candidater\n`/stats` - Voir ta progression et tes gains'
+                        value: '**Ticket auto** à l\'arrivée - Remplis ta candidature dans ton canal ticket\n`/stats` - Voir ta progression et tes gains'
                     },
                     {
                         name: '📱 Affiliation & Comptes',
@@ -94,7 +94,7 @@ module.exports = {
             if (interaction.member.permissions.has('Administrator')) {
                 helpEmbed.addFields({
                     name: '👑 Admin',
-                    value: '`/ticket-setup` - Envoyer le message Postuler dans #accueil\n`/setup` - Configurer le serveur'
+                    value: '`/ticket-setup` - Message Postuler (fallback) dans #accueil\n`/setup` - Configurer le serveur'
                 });
             }
 

@@ -201,7 +201,7 @@ module.exports = {
                             '• Partager tes analyses avec les autres.\n' +
                             '• Aider la communauté à grandir.\n\n' +
                             '**Commandes utiles:**\n' +
-                            '**Postuler** (bouton dans #accueil)\n' +
+                            '**Ticket auto** à l\'arrivée (ou bouton Postuler dans #accueil)\n' +
                             '`/stats` - Voir ta progression\n' +
                             '`/pay view` - Voir tes gains d\'affiliation\n'
                         )

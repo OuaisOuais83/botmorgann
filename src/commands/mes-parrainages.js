@@ -21,7 +21,7 @@ module.exports = {
                 await interaction.editReply({
                     content:
                         `❌ Tu n'as pas encore de profil.\n\n` +
-                        `Va dans #accueil et clique sur **Postuler** pour ouvrir une candidature !`
+                        `Un ticket est créé automatiquement à leur arrivée. Sinon #accueil → **Postuler**.`
                 });
                 return;
             }

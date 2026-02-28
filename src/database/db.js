@@ -242,6 +242,25 @@ const dbFunctions = {
         return app;
     },
 
+    createApplicationForOnboarding: async (userId, username) => {
+        const app = {
+            id: getNextId('applications'),
+            user_id: userId,
+            username: username,
+            experience: null,
+            portfolio: null,
+            motivation: null,
+            status: 'ticket_open',
+            applied_at: new Date().toISOString(),
+            reviewed_at: null,
+            reviewed_by: null,
+            channel_id: null
+        };
+        database.applications.push(app);
+        saveDatabase();
+        return app;
+    },
+
     updateApplication: async (id, data) => {
         const app = database.applications.find(a => a.id === id);
         if (app) {
@@ -249,6 +268,7 @@ const dbFunctions = {
             if (data.portfolio != null) app.portfolio = data.portfolio;
             if (data.motivation != null) app.motivation = data.motivation;
             if (data.status != null) app.status = data.status;
+            if (data.channel_id !== undefined) app.channel_id = data.channel_id;
             saveDatabase();
         }
         return app;
